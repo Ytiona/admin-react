@@ -3,6 +3,8 @@ import { CopyrightOutlined, UserOutlined, LockOutlined } from '@ant-design/icons
 import { Tabs, Space, Input, Button, message } from 'antd';
 import axios from 'axios';
 import { LoginWrap } from './style';
+import * as userApi from '@/api/user';
+
 const { TabPane } = Tabs;
 
 function useRequest(fn) {
@@ -10,9 +12,7 @@ function useRequest(fn) {
   function run() {
     setLoading(true);
     fn().finally(() => {
-      setTimeout(() => {
-        setLoading(false);
-      }, 1000)
+      setLoading(false);
     })
   }
   return [loading, run, setLoading];
