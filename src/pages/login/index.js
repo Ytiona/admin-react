@@ -1,3 +1,11 @@
+/*
+ * @Author: your name
+ * @Date: 2021-05-11 22:58:12
+ * @LastEditTime: 2021-05-26 02:13:14
+ * @LastEditors: your name
+ * @Description: In User Settings Edit
+ * @FilePath: \admin-react\src\pages\login\index.js
+ */
 import React, { memo, useState } from 'react'
 import { CopyrightOutlined, UserOutlined, LockOutlined } from '@ant-design/icons';
 import { Tabs, Space, Input, Button, message } from 'antd';
@@ -6,6 +14,8 @@ import { LoginWrap } from './style';
 import * as userApi from '@/api/user';
 
 const { TabPane } = Tabs;
+
+userApi.getUserInfo()
 
 function useRequest(fn) {
   const [loading, setLoading] = useState(false);

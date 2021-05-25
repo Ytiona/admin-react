@@ -23,7 +23,7 @@ function post (api, defaultData, defaultOption) {
 }
 
 //获取用户信息
-export const getUserInfo = get('/user/getUserInfo');
+export const getUserInfo = get('/');
 
 //获取我的企业
 export const getMyEnterprise = get('/user/getMyEnterprise')
