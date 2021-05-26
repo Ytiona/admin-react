@@ -1,29 +1,9 @@
-import http from "@/utils/http";
-import { shallowMergeObj } from '@/utils/helpers';
-import store from '@/store';
-
-function get (api, defaultParams, defaultOption) {
-  return function (params, option) {
-    return http.get.bind(http)(
-      api, 
-      shallowMergeObj(defaultParams, params),
-      shallowMergeObj(defaultOption, option)
-    )
-  }
-}
-
-function post (api, defaultData, defaultOption) {
-  return function (data, option) {
-    return http.post.bind(http)(
-      api, 
-      shallowMergeObj(defaultData, data),
-      shallowMergeObj(defaultOption, option)
-    )
-  }
-}
+import { getWrap as get, postWrap as post } from './utils';
 
 //获取用户信息
-export const getUserInfo = get('/');
+export const getUserInfo = get('/', {}, { freshTime: 1000 });
+
+export const postTest = post('/post');
 
 //获取我的企业
 export const getMyEnterprise = get('/user/getMyEnterprise')

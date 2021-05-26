@@ -1,21 +1,21 @@
-/*
- * @Author: your name
- * @Date: 2021-05-11 22:58:12
- * @LastEditTime: 2021-05-26 02:13:14
- * @LastEditors: your name
- * @Description: In User Settings Edit
- * @FilePath: \admin-react\src\pages\login\index.js
- */
 import React, { memo, useState } from 'react'
 import { CopyrightOutlined, UserOutlined, LockOutlined } from '@ant-design/icons';
 import { Tabs, Space, Input, Button, message } from 'antd';
 import axios from 'axios';
 import { LoginWrap } from './style';
+
 import * as userApi from '@/api/user';
+
 
 const { TabPane } = Tabs;
 
-userApi.getUserInfo()
+userApi.getUserInfo().then(res => {
+  console.log(res);
+})
+
+userApi.postTest().then(res => {
+  console.log(res);
+})
 
 function useRequest(fn) {
   const [loading, setLoading] = useState(false);
@@ -32,6 +32,7 @@ export default memo(function Login() {
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
   const [loginLoading, login] = useRequest(loginRequest);
+
   function loginRequest() {
     return axios.post('http://192.168.0.101:3001/user/login', {
       userName,
@@ -45,6 +46,7 @@ export default memo(function Login() {
       }
     })
   }
+
   return (
     <LoginWrap>
       <div className="main">

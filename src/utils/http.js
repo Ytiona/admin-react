@@ -1,21 +1,15 @@
 import axios from 'axios';
 import md5 from 'md5';
-import { validator} from '@/utils/helpers';
-
-// 1.请求并发限制  post 同接口同参数 默认禁止并发
-// 2.请求取消  布尔/hook
-// 3.请求缓存  单独配置为true，则采用实例的存储器，传了存储器则采用存储器，存储器(传入一个带有get、set方法的对象, 可连接vuex、redux等)
-// 4.固定参数  ok
-// 5.响应复用
-// 6.文件上传   待定
+import { validator, shallowMergeObj } from '@/utils/helpers';
 
 /**
- * @Description 基于axios的请求类封装，具有：取消、缓存、并发限制、防抖、节流、响应复用等功能
- * @param  {Function} useHttp axios实例的钩子
- * @param  {Function} getUniKey 自定义请求unikey生成方法
- * @param  {Number} cacheMax 最大缓存变量数
- * @param  {Object} cacheStore 缓存仓库，须具有get、set方法
- * @param  {Object} defaultRequestOption 默认请求选项，例：默认post同接同参数的请求都会限制并发，请求方法（set、post）的映射
+ * @Description 基于axios的请求类封装，具有：取消、缓存、并发限制、响应复用等功能
+ * @param  {Function} useHttp 选填 axios实例的钩子
+ * @param  {Function} getUniKey 选填 自定义请求unikey生成方法
+ * @param  {Object} cacheStore 选填 缓存仓库，须具有get、set方法
+ * @param  {Number} cacheMax 选填 最大缓存变量数
+ * @param  {Number} axiosConfig 选填 axios.create的配置
+ * @param  {Object} defaultRequestOption 选填 默认请求选项，例：默认post同接同参数的请求都会限制并发，请求方法（set、post）的映射
  * @return {Http} 请求工具实例类
  */
 export class Http {
@@ -28,25 +22,12 @@ export class Http {
     defaultRequestOption,
   } = {}) {
     this.http = axios.create(axiosConfig);
-    this.requestPool = {};
+    this.requestPool = {};// 请求池，存储请求状态等信息
     this.CancelToken = axios.CancelToken;
-    this.defaultRequestOption = {
-      post: {
-        concurrent: false
-      }
-    };
     this.cacheMax = cacheMax;
-    this.cacheStore = (function () {
-      const store = {};
-      return {
-        set: function (key, data) {
-          return store[key] = data;
-        },
-        get: function (key) {
-          return store[key];
-        }
-      }
-    }())
+    this.cacheArr = [];
+    this.initDefaultRequestOption();
+    this.initDefaultCacheStore();
     validator.isFunction(useHttp, () => {
       useHttp(this.http);
     })
@@ -66,105 +47,111 @@ export class Http {
     validator.isObject(defaultRequestOption, () => {
       this.defaultRequestOption = defaultRequestOption;
     })
+    this.generateRequestMethod();
   }
 
+  // 初始默认请求仓库
+  initDefaultCacheStore() {
+    this.cacheStore = (function () {
+      const store = {};
+      return {
+        set: function (key, data) {
+          return store[key] = data;
+        },
+        get: function (key) {
+          return store[key];
+        }
+      }
+    }())
+  }
+
+  // 初始默认请求配置
+  initDefaultRequestOption() {
+    this.defaultRequestOption = {
+      post: {
+        concurrent: false
+      }
+    }
+  }
+
+  //生成请求方法
+  generateRequestMethod() {
+    this.request = this.requestMethodGenerator();
+    const methods = ['get', 'post', 'delete', 'head', 'put', 'patch', 'options'];
+    for(let i = 0; methods[i]; i++) {
+      const item = methods[i];
+      this[item] = this.requestMethodGenerator(item);
+    }
+  }
+
+  /**
+   * @Description 请求方法生成器，主要逻辑入口
+   * @param {String} url api地址
+   * @param {Object} params 请求参数
+   * @param {Object} options 请求选项
+   * @param {Boolean} options.cacel 是否遵循下一请求发出即取消上一请求
+   * @param {Function} options.canceler 取消器钩子
+   * @param {Boolean} options.cache 是否缓存请求
+   * @param {Number} options.debounce 防抖间隔
+   * @param {Number} options.throttle 节流间隔
+   * @param {Boolean} options.concurrent 是否允许并发
+   * @param {Number} options.freshTime 响应复用的数据新鲜时间（传了值，代表在某时长内复用第一个请求的响应结果）
+   * @return {Promise} 请求结果
+   */
+  requestMethodGenerator(method) {
+    return (url, params, options) => {
+      const _method = method.toLowerCase();
+      const apiUniKey = this.getUniKey(url, params);
+      return this.iterator([
+        this.handleConcurrent,//并发
+        this.handleCacel,//取消
+        this.handleResponseReuse,//响应复用
+        this.handleCache,//缓存
+        this.sendRequest(shallowMergeObj(options.axiosOptions, {url, params, method })),//发送请求
+      ], apiUniKey, shallowMergeObj(options, this.defaultRequestOption[_method]))
+    }
+  }
+
+  // 获取请求唯一key
   getUniKey(api, params) {
     return md5(`${api} ${JSON.stringify(params)}`);
   }
 
-  /**
-   * @param {String} url api地址
-   * @param {Object} params 请求参数
-   * @param {Object} option 请求选项
-   * @param {Boolean} option.cacel 是否遵循下一请求发出即取消上一请求
-   * @param {Function} option.canceler 取消器钩子
-   * @param {Boolean} option.cache 是否缓存请求
-   * @param {Number} option.debounce 防抖间隔
-   * @param {Number} option.throttle 节流间隔
-   * @param {Boolean} option.concurrent 是否允许并发
-   * @param {Number} option.freshTime 响应复用的数据新鲜时间（传了值，代表在某时长内复用第一个请求的响应结果）
-   * @return  {Promise} 请求结果
-   */
-  get(url, params, option = {}) {
-    const apiUniKey = this.getUniKey(url, params);
-    return this.iterator([
-      this.handleConcurrent,//并发
-      this.handleCacel,//取消
-      this.handleResponseReuse,//响应复用
-      this.handleCache,//缓存
-      this.sendRequest({
-        url,
-        params,
-        method: 'GET'
-      }),//发送请求
-    ], apiUniKey, option)
-  }
-
-  /**
-   * @param {String} url api地址
-   * @param {Object} params 请求参数
-   * @param {Object} option 请求选项
-   * @param {Boolean} option.cacel 是否遵循下一请求发出即取消上一请求
-   * @param {Function} option.canceler 取消器钩子
-   * @param {Boolean} option.cache 是否缓存请求
-   * @param {Number} option.debounce 防抖间隔
-   * @param {Number} option.throttle 节流间隔
-   * @param {Boolean} option.concurrent 是否允许并发
-   * @param {Number} option.freshTime 响应复用的数据新鲜时间（传了值，代表在某时长内复用第一个请求的响应结果）
-   * @return  {Promise} 请求结果
-   */
-  post(url, data, option = {}) {
-    const apiUniKey = this.getUniKey(url, data);
-    return this.iterator([
-      this.handleConcurrent,//并发
-      this.handleCacel,//取消
-      this.handleResponseReuse,//响应复用
-      this.handleCache,//缓存
-      this.sendRequest({
-        url,
-        data,
-        method: 'POST'
-      }),//发送请求
-    ], apiUniKey, option)
-  }
-
-  iterator(fnArr, apiUniKey, option) {
-    const self = this;
+  // 模块迭代器
+  iterator(fnArr, apiUniKey, options) {
+    const instance = this;
     return new Promise((resolve, reject) => {
       let idx = 0;
       function exec () {
-        fnArr[idx].bind(self)({
-          resolve,
-          reject,
-          next: () => {
-            idx ++;
-            exec.bind(self)();
-          }
-        }, apiUniKey, option)
+        const next = () => { idx ++; exec(); }
+        fnArr[idx].bind(instance)({ resolve, reject, next}, apiUniKey, options);
       }
-      exec.bind(self)();
+      exec();
     })
   }
 
-  handleConcurrent({ next, reject }, apiUniKey, option) {
+  // 处理并发
+  handleConcurrent({ next, reject }, apiUniKey, { concurrent }) {
     const sameRequest = this.requestPool[apiUniKey] || {};
-    if(option.concurrent === false && sameRequest.state === 'pending') {
+    if(concurrent === false && sameRequest.state === 'pending') {
       return reject({ message: 'Request concurrency is limited' });
     }
     next();
   }
 
-  handleCacel({ next }, apiUniKey, option) {
+  // 处理请求取消
+  handleCacel({ next }, apiUniKey, { cancel }) {
     const sameRequest = this.requestPool[apiUniKey] || {};
-    if(option.cancel === true && sameRequest.state === 'pending') {
+    if(cancel === true && sameRequest.state === 'pending') {
       sameRequest.canceler();
     }
     next();
   }
 
-  handleResponseReuse({ next, resolve, reject }, apiUniKey, option) {
-    if(typeof option.freshTime === 'number') {
-      const { promise, fresh } = this.requestPool[apiUniKey];
+  // 处理响应复用
+  handleResponseReuse({ next, resolve, reject }, apiUniKey, { freshTime }) {
+    if(typeof freshTime === 'number') {
+      const { promise, fresh } = this.requestPool[apiUniKey] || {};
       if(promise && fresh) {
         return promise.then(resolve, reject);
       }
@@ -172,14 +159,18 @@ export class Http {
     next();
   }
   
-  handleCache({ next, resolve }, apiUniKey) {
-    const cache = this.cacheStore.get(apiUniKey);
+  // 处理缓存
+  handleCache({ next, resolve }, apiUniKey, { cache }) {
     if(cache) {
-      return resolve(cache);
+      const cacheData = this.cacheStore.get(apiUniKey);
+      if(cacheData) {
+        return resolve(cacheData);
+      }
     }
     next();
   }
 
+  // 发送请求
   sendRequest(requestOption) {
     return ({ resolve, reject }, apiUniKey, { freshTime, useCacneler, cache }) => {
       if(!this.requestPool[apiUniKey]) {
@@ -198,32 +189,77 @@ export class Http {
       })
       .then(res => {
         if(cache) {
+          if(this.cacheArr.length > this.cacheMax) {
+            const firstApiKey = this.cacheArr.shift();
+            this.cacheStore.set(firstApiKey, null);
+          }
+          this.cacheArr.push(apiUniKey);
           this.cacheStore.set(apiUniKey, res);
         }
         resolve(res);
         if(typeof freshTime === 'number') {
           setTimeout(() => {
-            this.requestPool[apiUniKey].fresh = false;
+            this.clearRequest(apiUniKey);
           }, freshTime)
         }
         return res;
       }, reject)
       .finally(() => {
-        this.requestPool[apiUniKey] = null;
-        delete this.requestPool[apiUniKey];
+        if(typeof freshTime !== 'number') {
+          this.clearRequest(apiUniKey);
+        }
       })
       return this.requestPool[apiUniKey].promise = requestPromise;
     }
   }
 
+  // 根据请求key将对应的请求从请求池中清除
+  clearRequest(apiUniKey) {
+    this.requestPool[apiUniKey] = null;
+    delete this.requestPool[apiUniKey];
+  }
+
+  // 文件上传
+  upload(url, file, key = 'file') {
+    const formData = new FormData();
+    formData.append(key, file);
+    return this.http({
+      url,
+      method: 'POST',
+      data: formData,
+      headers: {
+        'Content-type': 'multipart/form-data'
+      }
+    })
+  }
+
+  // 清空请求池
   clearRequestPool() {
     this.requestPool = {};
   }
-
 }
 
-export default new Http({
+const http = new Http({
   axiosConfig: {
-    baseURL: 'http://localhost:3001'
+    timeout: 1000 * 60 * 10,
+    baseURL: 'http://localhost:3001',
+    PlatformID: '456123128745656',
+    PlatformName: '政策快车'
   },
-});
+  useHttp: axios => {
+    axios.interceptors.request.use(config => {
+      config.headers.Authorization = Date.now();
+      return config;
+    })
+    axios.interceptors.response.use(res => {
+      const data = res.data;
+      if(typeof data.Data === 'string') {
+        data.Data = JSON.parse(data.Data);
+      }
+      return data;
+    })
+  }
+})
+
+export default http;
+
