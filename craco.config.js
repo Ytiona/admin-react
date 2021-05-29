@@ -8,5 +8,17 @@ module.exports = {
       "@": resolve("src"),
       "components": resolve("src/components")
     }
-  }
+  },
+  babel: {
+    plugins: [
+      [
+        "import",
+        {
+          libraryName: "ahooks",
+          libraryDirectory: "es"
+        }
+      ]
+    ]
+  },
+  
 }

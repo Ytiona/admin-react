@@ -78,9 +78,11 @@ export class Http {
   generateRequestMethod() {
     this.request = this.requestMethodGenerator();
     const methods = ['get', 'post', 'delete', 'head', 'put', 'patch', 'options'];
+    const needDataMethods = ['post', 'put', 'patch'];
     for(let i = 0; methods[i]; i++) {
       const item = methods[i];
-      this[item] = this.requestMethodGenerator(item);
+      const paramsKey = needDataMethods.includes(item) ? 'data' : 'params';
+      this[item] = this.requestMethodGenerator(item, paramsKey);
     }
   }
 
@@ -92,23 +94,22 @@ export class Http {
    * @param {Boolean} options.cacel 是否遵循下一请求发出即取消上一请求
    * @param {Function} options.canceler 取消器钩子
    * @param {Boolean} options.cache 是否缓存请求
-   * @param {Number} options.debounce 防抖间隔
-   * @param {Number} options.throttle 节流间隔
    * @param {Boolean} options.concurrent 是否允许并发
    * @param {Number} options.freshTime 响应复用的数据新鲜时间（传了值，代表在某时长内复用第一个请求的响应结果）
    * @return {Promise} 请求结果
    */
-  requestMethodGenerator(method) {
+  requestMethodGenerator(method, paramsKey) {
     return (url, params, options) => {
-      const _method = method.toLowerCase();
       const apiUniKey = this.getUniKey(url, params);
+      const requestOptions = shallowMergeObj(options.axiosOptions, {url, method });
+      requestOptions[paramsKey] = params;
       return this.iterator([
         this.handleConcurrent,//并发
         this.handleCacel,//取消
         this.handleResponseReuse,//响应复用
         this.handleCache,//缓存
-        this.sendRequest(shallowMergeObj(options.axiosOptions, {url, params, method })),//发送请求
-      ], apiUniKey, shallowMergeObj(options, this.defaultRequestOption[_method]))
+        this.sendRequest(requestOptions),//发送请求
+      ], apiUniKey, shallowMergeObj(options, this.defaultRequestOption[method]))
     }
   }
 
@@ -189,19 +190,14 @@ export class Http {
       })
       .then(res => {
         if(cache) {
-          if(this.cacheArr.length > this.cacheMax) {
-            const firstApiKey = this.cacheArr.shift();
-            this.cacheStore.set(firstApiKey, null);
-          }
-          this.cacheArr.push(apiUniKey);
-          this.cacheStore.set(apiUniKey, res);
+          this.setCache(apiUniKey, res);
         }
-        resolve(res);
         if(typeof freshTime === 'number') {
           setTimeout(() => {
             this.clearRequest(apiUniKey);
           }, freshTime)
         }
+        resolve(res);
         return res;
       }, reject)
       .finally(() => {
@@ -211,6 +207,15 @@ export class Http {
       })
       return this.requestPool[apiUniKey].promise = requestPromise;
     }
+  }
+  //设置缓存，限制缓存数据数量
+  setCache(apiUniKey, data) {
+    if(this.cacheArr.length > this.cacheMax) {
+      const firstApiKey = this.cacheArr.shift();
+      this.cacheStore.set(firstApiKey, null);
+    }
+    this.cacheArr.push(apiUniKey);
+    this.cacheStore.set(apiUniKey, data);
   }
 
   // 根据请求key将对应的请求从请求池中清除
@@ -243,8 +248,10 @@ const http = new Http({
   axiosConfig: {
     timeout: 1000 * 60 * 10,
     baseURL: 'http://localhost:3001',
-    PlatformID: '456123128745656',
-    PlatformName: '政策快车'
+    data: {
+      PlatformID: '456123128745656',
+      PlatformName: '政策快车'
+    }
   },
   useHttp: axios => {
     axios.interceptors.request.use(config => {
@@ -253,9 +260,6 @@ const http = new Http({
     })
     axios.interceptors.response.use(res => {
       const data = res.data;
-      if(typeof data.Data === 'string') {
-        data.Data = JSON.parse(data.Data);
-      }
       return data;
     })
   }

@@ -1,21 +1,9 @@
 import React, { memo, useState } from 'react'
 import { CopyrightOutlined, UserOutlined, LockOutlined } from '@ant-design/icons';
 import { Tabs, Space, Input, Button, message } from 'antd';
-import axios from 'axios';
 import { LoginWrap } from './style';
-
 import * as userApi from '@/api/user';
-
-
 const { TabPane } = Tabs;
-
-userApi.getUserInfo().then(res => {
-  console.log(res);
-})
-
-userApi.postTest().then(res => {
-  console.log(res);
-})
 
 function useRequest(fn) {
   const [loading, setLoading] = useState(false);
@@ -34,15 +22,14 @@ export default memo(function Login() {
   const [loginLoading, login] = useRequest(loginRequest);
 
   function loginRequest() {
-    return axios.post('http://192.168.0.101:3001/user/login', {
+    return userApi.login({
       userName,
       password
     }).then(res => {
-      const data = res.data;
-      if(data.code === 0) {
-        message.success(data.msg);
+      if(res.code === 0) {
+        message.success(res.msg);
       } else {
-        message.error(data.msg);
+        message.error(res.msg);
       }
     })
   }
