@@ -5,7 +5,7 @@ import { validator, shallowMergeObj } from '@/utils/helpers';
 /**
  * @Description 基于axios的请求类封装，具有：取消、缓存、并发限制、响应复用等功能
  * @param  {Function} useHttp 选填 axios实例的钩子
- * @param  {Function} getUniKey 选填 自定义请求unikey生成方法
+ * @param  {Function} getRequestKey 选填 自定义请求unikey生成方法
  * @param  {Object} cacheStore 选填 缓存仓库，须具有get、set方法
  * @param  {Number} cacheMax 选填 最大缓存变量数
  * @param  {Number} axiosConfig 选填 axios.create的配置
@@ -15,9 +15,9 @@ import { validator, shallowMergeObj } from '@/utils/helpers';
 export class Http {
   constructor({
     useHttp,
-    getUniKey,
+    getRequestKey,
     cacheStore,
-    cacheMax = 50,
+    cacheMax = 100,
     axiosConfig,
     defaultRequestOption,
   } = {}) {
@@ -31,15 +31,15 @@ export class Http {
     validator.isFunction(useHttp, () => {
       useHttp(this.http);
     })
-    validator.isFunction(getUniKey, () => {
-      this.getUniKey = getUniKey;
+    validator.isFunction(getRequestKey, () => {
+      this.getRequestKey = getRequestKey;
     })
     validator.isObject(cacheStore, () => {
       const { get, set } = cacheStore;
-      if(!validator.isFunction(set)) {
+      if (!validator.isFunction(set)) {
         throw new Error('cacheStore must have set function');
       }
-      if(!validator.isFunction(get)) {
+      if (!validator.isFunction(get)) {
         throw new Error('cacheStore must have get function');
       }
       this.cacheStore = cacheStore;
@@ -49,7 +49,6 @@ export class Http {
     })
     this.generateRequestMethod();
   }
-
   // 初始默认请求仓库
   initDefaultCacheStore() {
     this.cacheStore = (function () {
@@ -69,17 +68,17 @@ export class Http {
   initDefaultRequestOption() {
     this.defaultRequestOption = {
       post: {
-        concurrent: false
+        concurrency: false
       }
     }
   }
 
-  //生成请求方法
+  // 生成请求方法
   generateRequestMethod() {
     this.request = this.requestMethodGenerator();
     const methods = ['get', 'post', 'delete', 'head', 'put', 'patch', 'options'];
     const needDataMethods = ['post', 'put', 'patch'];
-    for(let i = 0; methods[i]; i++) {
+    for (let i = 0; methods[i]; i++) {
       const item = methods[i];
       const paramsKey = needDataMethods.includes(item) ? 'data' : 'params';
       this[item] = this.requestMethodGenerator(item, paramsKey);
@@ -94,27 +93,32 @@ export class Http {
    * @param {Boolean} options.cacel 是否遵循下一请求发出即取消上一请求
    * @param {Function} options.canceler 取消器钩子
    * @param {Boolean} options.cache 是否缓存请求
-   * @param {Boolean} options.concurrent 是否允许并发
-   * @param {Number} options.freshTime 响应复用的数据新鲜时间（传了值，代表在某时长内复用第一个请求的响应结果）
+   * @param {Boolean} options.concurrency 是否允许并发
+   * @param {Number} options.freshTime 响应复用的数据新鲜时间（传了值，代表在某时长内复用第一个请求的响应结果），建议该配置写在api层
    * @return {Promise} 请求结果
    */
   requestMethodGenerator(method, paramsKey) {
     return (url, params, options) => {
-      const apiUniKey = this.getUniKey(url, params);
-      const requestOptions = shallowMergeObj(options.axiosOptions, {url, method });
+      const getRequestKey = options.getRequestKey || this.getRequestKey;
+      const apiUniKey = getRequestKey(url, params);
+      const requestOptions = shallowMergeObj(options.axiosOptions, { url, method });
       requestOptions[paramsKey] = params;
-      return this.iterator([
-        this.handleConcurrent,//并发
-        this.handleCacel,//取消
-        this.handleResponseReuse,//响应复用
-        this.handleCache,//缓存
-        this.sendRequest(requestOptions),//发送请求
-      ], apiUniKey, shallowMergeObj(options, this.defaultRequestOption[method]))
+      return this.iterator(
+        [
+          this.handleConcurrent,// 并发
+          this.handleCacel,// 取消
+          this.handleResponseReuse,// 响应复用
+          this.handleCache,// 缓存
+          this.sendRequest(requestOptions),// 发送请求
+        ], 
+        apiUniKey, 
+        shallowMergeObj(this.defaultRequestOption[method], options)
+      )
     }
   }
 
   // 获取请求唯一key
-  getUniKey(api, params) {
+  getRequestKey(api, params) {
     return md5(`${api} ${JSON.stringify(params)}`);
   }
 
@@ -123,18 +127,18 @@ export class Http {
     const instance = this;
     return new Promise((resolve, reject) => {
       let idx = 0;
-      function exec () {
-        const next = () => { idx ++; exec(); }
-        fnArr[idx].bind(instance)({ resolve, reject, next}, apiUniKey, options);
+      function exec() {
+        const next = () => { idx++; exec(); }
+        fnArr[idx].bind(instance)({ resolve, reject, next }, apiUniKey, options);
       }
       exec();
     })
   }
 
   // 处理并发
-  handleConcurrent({ next, reject }, apiUniKey, { concurrent }) {
+  handleConcurrent({ next, reject }, apiUniKey, { concurrency }) {
     const sameRequest = this.requestPool[apiUniKey] || {};
-    if(concurrent === false && sameRequest.state === 'pending') {
+    if (concurrency === false && sameRequest.state === 'pending') {
       return reject({ message: 'Request concurrency is limited' });
     }
     next();
@@ -143,28 +147,28 @@ export class Http {
   // 处理请求取消
   handleCacel({ next }, apiUniKey, { cancel }) {
     const sameRequest = this.requestPool[apiUniKey] || {};
-    if(cancel === true && sameRequest.state === 'pending') {
-      sameRequest.canceler();
+    if (cancel === true && sameRequest.state === 'pending') {
+      sameRequest.canceler('The request was cancelled by subsequent requests');
     }
     next();
   }
 
   // 处理响应复用
   handleResponseReuse({ next, resolve, reject }, apiUniKey, { freshTime }) {
-    if(typeof freshTime === 'number') {
+    if (typeof freshTime === 'number') {
       const { promise, fresh } = this.requestPool[apiUniKey] || {};
-      if(promise && fresh) {
+      if (promise && fresh) {
         return promise.then(resolve, reject);
       }
     }
     next();
   }
-  
+
   // 处理缓存
   handleCache({ next, resolve }, apiUniKey, { cache }) {
-    if(cache) {
+    if (cache) {
       const cacheData = this.cacheStore.get(apiUniKey);
-      if(cacheData) {
+      if (cacheData) {
         return resolve(cacheData);
       }
     }
@@ -173,44 +177,48 @@ export class Http {
 
   // 发送请求
   sendRequest(requestOption) {
-    return ({ resolve, reject }, apiUniKey, { freshTime, useCacneler, cache }) => {
-      if(!this.requestPool[apiUniKey]) {
+    return ({ resolve, reject }, apiUniKey, { freshTime, useCanceler, cache }) => {
+      if (!this.requestPool[apiUniKey]) {
         this.requestPool[apiUniKey] = {};
       }
       this.requestPool[apiUniKey].state = 'pending';
-      if(typeof freshTime === 'number') {
+      if (typeof freshTime === 'number') {
         this.requestPool[apiUniKey].fresh = true;
       }
       const requestPromise = this.http({
         ...requestOption,
         cancelToken: new this.CancelToken(canceler => {
           this.requestPool[apiUniKey].canceler = canceler;
-          useCacneler && useCacneler(canceler);
+          useCanceler && useCanceler(canceler);
         })
       })
-      .then(res => {
-        if(cache) {
-          this.setCache(apiUniKey, res);
-        }
-        if(typeof freshTime === 'number') {
-          setTimeout(() => {
+        .then(res => {
+          if (cache) {
+            this.setCache(apiUniKey, res);
+          }
+          if (typeof freshTime === 'number') {
+            // 数据新鲜时间到期则清除
+            setTimeout(() => {
+              this.clearRequest(apiUniKey);
+            }, freshTime)
+          }
+          resolve(res);
+          return res;
+        }, reject)
+        .finally(() => {
+          // 未设置新鲜时间，请求结束直接清除
+          if (typeof freshTime !== 'number') {
             this.clearRequest(apiUniKey);
-          }, freshTime)
-        }
-        resolve(res);
-        return res;
-      }, reject)
-      .finally(() => {
-        if(typeof freshTime !== 'number') {
-          this.clearRequest(apiUniKey);
-        }
-      })
+          }
+        })
+      // 存储promise对象，用于响应复用
       return this.requestPool[apiUniKey].promise = requestPromise;
     }
   }
-  //设置缓存，限制缓存数据数量
+  
+  // 设置缓存，限制缓存数据数量
   setCache(apiUniKey, data) {
-    if(this.cacheArr.length > this.cacheMax) {
+    if (this.cacheArr.length > this.cacheMax) {
       const firstApiKey = this.cacheArr.shift();
       this.cacheStore.set(firstApiKey, null);
     }

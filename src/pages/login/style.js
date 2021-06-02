@@ -39,12 +39,4 @@ export const LoginWrap = styled.div`
       margin-top: 30px;
     }
   }
-  .footer {
-    padding: 10px;
-    text-align: center;
-    color: ${grey[0]};
-    .icon {
-      margin-right: 4px;
-    }
-  }
 `;

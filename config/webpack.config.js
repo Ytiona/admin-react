@@ -416,13 +416,14 @@ module.exports = function (webpackEnv) {
                   ],
                 ],
                 plugins: [
-                  [
-                    "import",
-                    {
-                      libraryName: "ahooks",
-                      libraryDirectory: "es"
-                    }
-                  ],
+                  // [
+                  //   "import",
+                  //   {
+                  //     libraryName: "ahooks",
+                  //     libraryDirectory: "es",
+                  //     camel2DashComponentName: false
+                  //   }
+                  // ],
                   [
                     require.resolve('babel-plugin-named-asset-import'),
                     {

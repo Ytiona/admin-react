@@ -1,25 +1,17 @@
 import React, { memo, useState } from 'react'
-import { CopyrightOutlined, UserOutlined, LockOutlined } from '@ant-design/icons';
+import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { Tabs, Space, Input, Button, message } from 'antd';
+import { useRequest } from 'ahooks';
 import { LoginWrap } from './style';
 import * as userApi from '@/api/user';
-const { TabPane } = Tabs;
-
-function useRequest(fn) {
-  const [loading, setLoading] = useState(false);
-  function run() {
-    setLoading(true);
-    fn().finally(() => {
-      setLoading(false);
-    })
-  }
-  return [loading, run, setLoading];
-}
+import AppFooter from 'components/app-footer';
 
 export default memo(function Login() {
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
-  const [loginLoading, login] = useRequest(loginRequest);
+  const { loading: loginLoading, run: login } = useRequest(loginRequest, {
+    manual: true
+  });
 
   function loginRequest() {
     return userApi.login({
@@ -42,7 +34,7 @@ export default memo(function Login() {
           <p className="desc">著名前端工程师Li Yu倾力打造</p>
         </div>
         <Tabs centered>
-          <TabPane tab="账号密码登录" key="1">
+          <Tabs.TabPane tab="账号密码登录" key="1">
             <Space direction="vertical" className="wrap" size="large">
               <Input
                 size="large"
@@ -60,10 +52,10 @@ export default memo(function Login() {
                 onChange={e => setPassword(e.target.value)}
               />
             </Space>
-          </TabPane>
-          <TabPane tab="手机号登录" key="2">
+          </Tabs.TabPane>
+          <Tabs.TabPane tab="手机号登录" key="2">
 
-          </TabPane>
+          </Tabs.TabPane>
         </Tabs>
         <Button 
           type="primary" 
@@ -77,10 +69,7 @@ export default memo(function Login() {
         </Button>
       </div>
       <footer className="footer">
-        <span className="icon">
-          <CopyrightOutlined />
-        </span>
-        Li Yu
+        <AppFooter/>
       </footer>
     </LoginWrap>
   )
