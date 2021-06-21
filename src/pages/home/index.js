@@ -2,7 +2,6 @@ import React, { memo } from 'react'
 import { Layout, Menu } from 'antd';
 import { LayoutWrap } from './style';
 import AppFooter from 'components/app-footer';
-
 const { Header, Content, Footer, Sider } = Layout;
 
 export default memo(function Home() {
@@ -20,7 +19,6 @@ export default memo(function Home() {
         <Layout className="main">
           <Header className="header"></Header>
           <Content className="content">
-
           </Content>
           <Footer className="footer">
             <AppFooter/>

@@ -16,13 +16,15 @@ export default memo(function Login() {
   function loginRequest() {
     return userApi.login({
       userName,
-      password
-    }).then(res => {
-      if(res.code === 0) {
-        message.success(res.msg);
-      } else {
-        message.error(res.msg);
+      password,
+      $config: { 
+        loadingConfig: '正在登录...', 
+        successTipType: 'notify',
+        successTipConfig: res => {
+          return { message: '登录成功', description: res.msg }
+        }
       }
+    }).then(res => {
     })
   }
 
@@ -43,6 +45,7 @@ export default memo(function Login() {
                 allowClear
                 className="f-item"
                 onChange={e => setUserName(e.target.value)}
+                onPressEnter={login}
               />
               <Input.Password 
                 size="large" 
@@ -50,6 +53,7 @@ export default memo(function Login() {
                 prefix={<LockOutlined className="inp-icon" />} 
                 className="f-item"
                 onChange={e => setPassword(e.target.value)}
+                onPressEnter={login}
               />
             </Space>
           </Tabs.TabPane>

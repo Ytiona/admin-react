@@ -6,7 +6,7 @@ import { HashRouter } from 'react-router-dom';
 import routes from './router';
 import store from './store';
 
-import AppLoading from 'components/app-loading';
+import AppLoading from '@/components/app-loading';
 
 import './App.css';
 

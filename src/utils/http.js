@@ -1,6 +1,6 @@
 import axios from 'axios';
 import md5 from 'md5';
-import { validator, shallowMergeObj } from '@/utils/helpers';
+import { validator, shallowMergeObj, getType } from '@/utils/helpers';
 
 /**
  * @Description 基于axios的请求类封装，具有：取消、缓存、并发限制、响应复用等功能
@@ -19,7 +19,7 @@ export class Http {
     cacheStore,
     cacheMax = 100,
     axiosConfig,
-    defaultRequestOption,
+    defaultRequestOption
   } = {}) {
     this.http = axios.create(axiosConfig);
     this.requestPool = {};// 请求池，存储请求状态等信息
@@ -83,6 +83,15 @@ export class Http {
       const paramsKey = needDataMethods.includes(item) ? 'data' : 'params';
       this[item] = this.requestMethodGenerator(item, paramsKey);
     }
+    this.upload = this.requestMethodGenerator('post', 'data', {
+      transformRequest: data => {
+        const formData = new FormData();
+        Object.keys(data).forEach(key => {
+          formData.append(key, data[key]);
+        })
+        return formData;
+      }
+    });
   }
 
   /**
@@ -94,14 +103,15 @@ export class Http {
    * @param {Function} options.canceler 取消器钩子
    * @param {Boolean} options.cache 是否缓存请求
    * @param {Boolean} options.concurrency 是否允许并发
+   * @param {Number} options.axiosOptions axios选项
    * @param {Number} options.freshTime 响应复用的数据新鲜时间（传了值，代表在某时长内复用第一个请求的响应结果），建议该配置写在api层
    * @return {Promise} 请求结果
    */
-  requestMethodGenerator(method, paramsKey) {
+  requestMethodGenerator(method, paramsKey, initAxiosOptions) {
     return (url, params, options) => {
       const getRequestKey = options.getRequestKey || this.getRequestKey;
       const apiUniKey = getRequestKey(url, params);
-      const requestOptions = shallowMergeObj(options.axiosOptions, { url, method });
+      const requestOptions = shallowMergeObj(initAxiosOptions, options.axiosOptions, { url, method });
       requestOptions[paramsKey] = params;
       return this.iterator(
         [
@@ -230,20 +240,6 @@ export class Http {
   clearRequest(apiUniKey) {
     this.requestPool[apiUniKey] = null;
     delete this.requestPool[apiUniKey];
-  }
-
-  // 文件上传
-  upload(url, file, key = 'file') {
-    const formData = new FormData();
-    formData.append(key, file);
-    return this.http({
-      url,
-      method: 'POST',
-      data: formData,
-      headers: {
-        'Content-type': 'multipart/form-data'
-      }
-    })
   }
 
   // 清空请求池

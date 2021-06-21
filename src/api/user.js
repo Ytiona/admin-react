@@ -1,5 +1,3 @@
-import { getWrap as get, postWrap as post } from './utils';
+import { getWrap as get, postWrap as post, uploadWrap as upload } from './utils';
 
-export const login = post('/user/login');
-
-export const getTest = get('/');
+export const login = post('/user/login')
