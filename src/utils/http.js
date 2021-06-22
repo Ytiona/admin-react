@@ -1,6 +1,8 @@
 import axios from 'axios';
 import md5 from 'md5';
-import { validator, shallowMergeObj, getType } from '@/utils/helpers';
+import { validator, shallowMergeObj } from '@/utils/helpers';
+// import { useSelector } from 'react-redux';
+import store from '@/store';
 
 /**
  * @Description 基于axios的请求类封装，具有：取消、缓存、并发限制、响应复用等功能
@@ -259,12 +261,13 @@ const http = new Http({
   },
   useHttp: axios => {
     axios.interceptors.request.use(config => {
-      config.headers.Authorization = Date.now();
+      const state = store.getState();
+      const token = state.getIn(['user', 'token'])
+      config.headers.Authorization = `Bearer ${token}`;
       return config;
     })
     axios.interceptors.response.use(res => {
-      const data = res.data;
-      return data;
+      return res.data;
     })
   }
 })

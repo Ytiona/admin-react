@@ -11,7 +11,13 @@ const codes = [SUCCESS_CODE, FAIL_CODE, WARNING_CODE];
 const plans = handleFeedbackPlan();
 
 const defaultConfig = {
+  get: {
+    checkCode: true,
+    correctCode: 0
+  },
   post: {
+    checkCode: true,
+    correctCode: 0,
     loading: true,
     loadingConfig: '正在提交...',
     successTip: true,
@@ -25,6 +31,8 @@ const defaultConfig = {
     warningTipConfig: res => res.msg
   },
   upload: {
+    checkCode: true,
+    correctCode: 0,
     loading: true,
     loadingConfig: '正在上传...',
     successTip: true,
@@ -60,24 +68,26 @@ export const postWrap = generatorWrap('post');
 
 export const uploadWrap = generatorWrap('upload');
 
-export function generatorWrap (method) {
+function generatorWrap (method) {
   return function (api, defaultParams, defaultOption) {
     return function (params, option) {
       const mergedParams = shallowMergeObj(defaultParams, params);
       const requestConfig = shallowMergeObj(defaultConfig[method], mergedParams.$config);
       delete mergedParams.$config;
-      const promise = http[method].bind(http)(
+      let promise = http[method].bind(http)(
         api, 
         mergedParams,
         shallowMergeObj(defaultOption, option)
       )
       handleLoading(promise, requestConfig);
       handleFeedback(promise, requestConfig);
+      promise = handleResponse(promise, requestConfig);
       return promise;
     }
   }
 }
 
+// 处理请求loading
 function handleLoading(promise, config) {
   if(config.loading) {
     const clearLoading = message.loading(config.loadingConfig);
@@ -85,6 +95,7 @@ function handleLoading(promise, config) {
   }
 }
 
+// 处理请求反馈
 function handleFeedback(promise, config) {
   promise.then(res => {
     if(!codes.includes(res.code)) return;
@@ -93,6 +104,22 @@ function handleFeedback(promise, config) {
       plans[type][res.code](tipConfig(res));
     }
   })
+}
+
+// 处理请求结果
+function handleResponse(promise, config) {
+  // 是否校验code值，才resolve结果，否则reject
+  if(config.checkCode) {
+    return new Promise((resolve, reject) => {
+      promise.then(res => {
+        if(res.code === config.correctCode) {
+          return resolve(res);
+        }
+        return reject(res);
+      }, reject)
+    })
+  }
+  return promise;
 }
 
 function handleFeedbackPlan() {
@@ -134,3 +161,4 @@ function codeIteration(store, args) {
     store[item] = args[index];
   })
 }
+

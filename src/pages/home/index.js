@@ -1,8 +1,11 @@
 import React, { memo } from 'react'
 import { Layout, Menu } from 'antd';
 import { LayoutWrap } from './style';
+import * as userApi from '@/api/user';
 import AppFooter from 'components/app-footer';
 const { Header, Content, Footer, Sider } = Layout;
+
+userApi.getTest();
 
 export default memo(function Home() {
   return (

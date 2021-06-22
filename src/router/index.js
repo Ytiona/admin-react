@@ -1,5 +1,6 @@
 import React from 'react';
 import { Redirect } from 'react-router-dom';
+import NotFound from '@/pages/not-found';
 
 const routes = [
   {
@@ -18,6 +19,10 @@ const routes = [
     path: '/login',
     exact: true,
     component: React.lazy(() => import("@/pages/login"))
+  },
+  {
+    path: '*',
+    component: React.lazy(() => import('@/pages/not-found'))
   }
 ]
 

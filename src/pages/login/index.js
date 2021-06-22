@@ -1,18 +1,21 @@
 import React, { memo, useState } from 'react'
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
-import { Tabs, Space, Input, Button, message } from 'antd';
+import { Tabs, Space, Input, Button } from 'antd';
+import { useDispatch } from 'react-redux';
+import { useHistory } from 'react-router-dom';
 import { useRequest } from 'ahooks';
 import { LoginWrap } from './style';
 import * as userApi from '@/api/user';
 import AppFooter from 'components/app-footer';
 
 export default memo(function Login() {
+  const dispatch = useDispatch();
+  const history = useHistory();
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
   const { loading: loginLoading, run: login } = useRequest(loginRequest, {
     manual: true
   });
-
   function loginRequest() {
     return userApi.login({
       userName,
@@ -25,6 +28,8 @@ export default memo(function Login() {
         }
       }
     }).then(res => {
+      dispatch({ type: 'setToken', data: res.result });
+      history.push('/home');
     })
   }
 
