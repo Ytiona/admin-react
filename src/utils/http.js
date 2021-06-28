@@ -1,8 +1,8 @@
 import axios from 'axios';
 import md5 from 'md5';
 import { validator, shallowMergeObj } from '@/utils/helpers';
-// import { useSelector } from 'react-redux';
 import store from '@/store';
+import { message } from 'antd';
 
 /**
  * @Description 基于axios的请求类封装，具有：取消、缓存、并发限制、响应复用等功能
@@ -268,6 +268,23 @@ const http = new Http({
     })
     axios.interceptors.response.use(res => {
       return res.data;
+    }, error => {
+      const { response } = error;
+      const { dispatch } = store;
+      if(response) {
+        let _msg = '';
+        switch(response.status) {
+          case 401:
+            _msg = '请重新登录';
+            dispatch({ type: 'logout' });
+            break;
+          default:
+            break;
+        }
+        const { msg } = response.data || {};
+        message.error(msg || _msg);
+      }
+      return Promise.reject(error);
     })
   }
 })

@@ -2,7 +2,8 @@ import { Map } from 'immutable';
 
 const defaultState = Map({
   token: '',
-  userInfo: {}
+  userInfo: {},
+  menuList: []
 })
 
 function reducer(state = defaultState, { type, data }) {
@@ -10,8 +11,15 @@ function reducer(state = defaultState, { type, data }) {
     case 'setUserInfo': 
       return state.set('userInfo', data);
     case 'setToken':
-      localStorage.setItem('token', data);
+      window.lStore.set('token', data);
       return state.set('token', data);
+    case 'setMenuList':
+      window.lStore.set('menuList', data);
+      return state.set('menuList', data);
+    case 'logout':
+      window.lStore.remove('token');
+      window.lStore.remove('menuList');
+      return state.set('menuList', []).set('token', '');
     default:
       return state;
   }

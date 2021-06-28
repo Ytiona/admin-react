@@ -1,36 +1,29 @@
+import '@/utils/window';
 import React, { memo, Suspense } from 'react'; 
 import { Provider } from 'react-redux';
 import { renderRoutes } from 'react-router-config';
 import { Router } from 'react-router-dom';
-import { createHashHistory } from 'history';
-
+import history from '@/router/history';
 import routes from './router';
 import store from './store';
-
 import AppLoading from '@/components/app-loading';
+import { ConfigProvider } from 'antd';
+import zhCN from 'antd/lib/locale/zh_CN';
 
-
-import '@/utils/window';
+import '@/lib/login';
 import './App.css';
-
-const history = createHashHistory();
-
-const token = localStorage.getItem('token');
-if(token) {
-  store.dispatch({ type: 'setToken', data: token });
-} else {
-  history.replace('/login');
-}
 
 function App() {
   return (
-    <Provider store={store}>
-      <Router history={history}>
-        <Suspense fallback={<AppLoading/>}>
-          { renderRoutes(routes) }
-        </Suspense>
-      </Router>
-    </Provider>
+    <ConfigProvider locale={zhCN}>
+      <Provider store={store}>
+        <Router history={history}>
+          <Suspense fallback={<AppLoading/>}>
+            { renderRoutes(routes) }
+          </Suspense>
+        </Router>
+      </Provider>
+    </ConfigProvider>
   );
 }
 

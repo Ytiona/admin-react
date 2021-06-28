@@ -2,7 +2,7 @@ import styled from 'styled-components';
 import { grey } from '@ant-design/colors';
 
 export const FooterWrap = styled.div`
-  padding: 10px;
+  padding: 20px;
   text-align: center;
   color: ${grey[0]};
   .icon {

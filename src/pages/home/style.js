@@ -10,8 +10,11 @@ export const LayoutWrap = styled.div`
     left: 0;
     height: 100vh;
     overflow: auto;
+    .menu-icon {
+      font-size: 10px;
+    }
   }
-  .main {
+  .uber-main {
     min-height: 100vh;
     margin-left: 200px;
   }
@@ -27,14 +30,17 @@ export const LayoutWrap = styled.div`
   .header {
     position: fixed;
     width: 100%;
+    height: 48px;
     z-index: 1;
     box-shadow: 0 1px 4px rgb(0 21 41 / 8%);
     background-color: #fff;
   }
-  .content {
-    height: 2000px;
-    margin: 14px;
-    margin-top: 78px;
+  .uber-content {
+    margin: 62px 14px 0 14px;
+    padding: 20px;
     background-color: #fff;
+  }
+  .footer {
+    padding: 0;
   }
 `

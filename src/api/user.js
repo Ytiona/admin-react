@@ -7,3 +7,5 @@ import {
 export const login = post('/user/login');
 
 export const getTest = get('/user/get');
+
+export const getMenuList = get('/user/getMenuList');

@@ -1,7 +1,8 @@
+import React, { memo } from 'react';
 import { CopyrightOutlined } from '@ant-design/icons';
 import { FooterWrap } from './style';
 
-export default function AppFooter () {
+export default memo(function AppFooter() {
   return (
     <FooterWrap>
       <span className="icon">
@@ -10,5 +11,4 @@ export default function AppFooter () {
       Li Yu
     </FooterWrap>
   )
-}
-
+})
