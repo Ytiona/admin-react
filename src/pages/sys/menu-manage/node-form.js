@@ -51,8 +51,9 @@ function MenuList({ onSelect }) {
   const [menuList, setMenuList] = useState();
   useEffect(() => {
     systemApi.getMenuList().then(res => {
+      const { menuTree = [] } = res.result || {};
       setMenuList(treeIterator(
-        res.result || [], 
+        menuTree, 
         item => {
           item.title = item.name;
           item.key = item.id;
