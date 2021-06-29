@@ -1,10 +1,17 @@
-import React, { memo, useState, useReducer, useCallback, useEffect, useImperativeHandle } from 'react'
+import React, { memo, useState, useReducer, useCallback, useEffect, useImperativeHandle, forwardRef } from 'react'
 import {
   Button, Form,
   Input, InputNumber, Switch,
-  Radio, Row, Col
+  Radio, Row, Col,
+  Tree, Popover
 } from 'antd';
-import { ApartmentOutlined, SmileOutlined } from '@ant-design/icons';
+import { 
+  ApartmentOutlined, SmileOutlined, 
+  FolderOpenOutlined, FileOutlined,
+  GoldOutlined
+} from '@ant-design/icons';
+import * as systemApi from '@/api/system';
+import { treeIterator } from '@/utils/tree';
 
 const typeOptions = [
   { label: '栏目', value: '0' },
@@ -13,28 +20,63 @@ const typeOptions = [
 ]
 
 const initNodeForm = {
-  parent_id: '11',
+  parent_id: '',
+  parent_name: '',
   type: '1',
-  name: '好借好还和',
-  code: '123',
-  icon: '123',
-  icon_type: '23132',
-  node_path: '12323',
-  component_path: '312332',
-  order_val: 1120,
-  remarks: '123213',
+  name: '',
+  code: '',
+  icon: '',
+  icon_type: '0',
+  node_path: '',
+  component_path: '',
+  order_val: null,
+  remarks: '',
   enabled: true,
-  request_addr: '12323'
+  request_addr: ''
+}
+
+const treeIconMap = {
+  0: <FolderOpenOutlined />,
+  1: <FileOutlined />,
+  2: <GoldOutlined />
 }
 
 function nodeFormReducer (state, action) {
   const result = Object.assign(state, action);
-  console.log(result)
+  // console.log(result);
   return result;
 }
 
-export default memo(function NodeForm(props) {
-  console.log(props);
+function MenuList({ onSelect }) {
+  const [menuList, setMenuList] = useState();
+  useEffect(() => {
+    systemApi.getMenuList().then(res => {
+      setMenuList(treeIterator(
+        res.result || [], 
+        item => {
+          item.title = item.name;
+          item.key = item.id;
+          item.icon = treeIconMap[item.type];
+        }
+      ))
+    })
+  }, [])
+  return (
+    <div style={{ height: '500px', overflow: 'auto', minWidth: '300px' }}>
+      <Tree
+        showIcon
+        showLine={{showLeafIcon: false}}
+        treeData={menuList}
+        style={{ color: '#515a6e' }}
+        onSelect={onSelect}
+      />
+    </div>
+  )
+}
+
+const NodeForm = function NodeForm({ parentId }, ref) {
+  
+
   const [nodeType, setNodeType] = useState('1');
   function renderByType(types, node) {
     if (Array.isArray(types)) {
@@ -53,21 +95,34 @@ export default memo(function NodeForm(props) {
       const { value, name } = event.target;
       updateNodeForm({ [name]: value })
     },
-    [],
+    []
   )
   
-  useImperativeHandle(props.ref, () => {
-    return {
-      nodeForm
-    }
-  })
+  useEffect(() => {
+    updateForm({ target: { name: 'parent_id', value: parentId } })
+  }, [parentId])
 
   const [formRef] = Form.useForm();
   useEffect(() => {
-    console.log(nodeForm);
     formRef.setFieldsValue(nodeForm);
-  }, [nodeForm])
+  }, [nodeForm, formRef])
 
+  const [isShowSelParent, setIsShowSelParent] = useState(false);
+  function onSelectParent(selKeys, { node }) {
+    updateForm({
+      target: { value: node.id, name: 'parent_id' }
+    })
+    updateForm({
+      target: { value: node.name, name: 'parent_name' }
+    })
+    setIsShowSelParent(false);
+  }
+
+  useImperativeHandle(ref, () => ({
+    nodeForm: nodeForm,
+    validateForm: formRef.validateFields
+  }))
+  
   return (
     <Form labelCol={{ span: 4 }} wrapperCol={{ span: 20 }} form={formRef}>
       <Form.Item label="类型" name="type">
@@ -79,12 +134,24 @@ export default memo(function NodeForm(props) {
           onChange={onChangeNodeType}
         />
       </Form.Item>
-      <Form.Item label="父级" name="parent_id">
+      <Form.Item label="父级">
         <Row gutter={10}>
           <Col flex="1">
-            <Input placeholder="请选择父级" name="parent_id" onChange={updateForm} value={nodeForm.parent_id} />
+            <Input placeholder="请选择父级" name="parent_name" onChange={updateForm} value={nodeForm.parent_name} />
           </Col>
-          <Col><Button icon={<ApartmentOutlined />}>选择父级</Button></Col>
+          <Col>
+            <Popover 
+              placement="rightTop" 
+              trigger="click" 
+              autoAdjustOverflow={false}
+              visible={isShowSelParent} 
+              content={
+                <MenuList onSelect={onSelectParent}/>
+              }
+            >
+              <Button icon={<ApartmentOutlined />} onClick={() => setIsShowSelParent(!isShowSelParent)}>选择父级</Button>
+            </Popover>
+          </Col>
         </Row>
       </Form.Item>
       <Form.Item label="名称" name="name" rules={[{ required: true, message: '请输入名称' }]}>
@@ -110,7 +177,7 @@ export default memo(function NodeForm(props) {
       }
       {
         renderByType('1',
-          <Form.Item label="前端组件" name="component_path" rules={[{ required: true, message: '请输入前端组件路径' }]}>
+          <Form.Item label="前端组件" name="component_path">
             <Input placeholder="请输入前端组件路径" name="component_path" onChange={updateForm} />
           </Form.Item>
         )
@@ -142,4 +209,6 @@ export default memo(function NodeForm(props) {
       </Form.Item>
     </Form>
   )
-})
+}
+
+export default memo(forwardRef(NodeForm));

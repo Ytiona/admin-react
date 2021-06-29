@@ -22,7 +22,7 @@ export default memo(function Home({ location }) {
   const [routes, setRoutes] = useState([]);
   useEffect(() => {
     if (!isLogined) return;
-    userApi.getMenuList().then(res => {
+    userApi.getUserMenuList().then(res => {
       const data = res.result || {};
       const routes = data.routes || [];
       const result = routes.map(item => {
@@ -75,7 +75,7 @@ function generateMenu(menuList) {
     if (item.type === '0') {
       return <SubMenu 
         key={item.node_path} 
-        icon={<Icon name={item.icon} className="menu-icon"/>} 
+        // icon={<Icon name={item.icon} className="menu-icon"/>} 
         title={item.name}
       >
         {item.children && item.children.length > 0 ? generateMenu(item.children) : null}
@@ -83,7 +83,7 @@ function generateMenu(menuList) {
     }
     return <Menu.Item 
       key={item.node_path} 
-      icon={<Icon name={item.icon} className="menu-icon"/>}
+      // icon={<Icon name={item.icon} className="menu-icon"/>}
     >
       <Link to={item.node_path}>{item.name}</Link>
     </Menu.Item>;

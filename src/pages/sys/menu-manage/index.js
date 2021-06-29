@@ -1,4 +1,4 @@
-import React, { memo, useState, useRef, useEffect } from 'react';
+import React, { memo, useState, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { 
   Button, Space, Tree, Row, Col,
@@ -13,6 +13,7 @@ import {
 import { treeIterator } from '@/utils/tree';
 import { StyleWrap } from './style';
 import NodeForm from './node-form';
+import * as systemApi from '@/api/system';
 
 const treeIconMap = {
   0: <FolderOpenOutlined />,
@@ -32,11 +33,11 @@ export default memo(function MenuManage() {
         }
       )
   }))
-
   const [isShowAddNode, setIsShowAddNode] = useState(false);
   const parentId = useRef(null);
   const selectedParentId = useRef(null);
   const addNodeRef = useRef();
+
   function handleAddChildNode () {
     parentId.current = selectedParentId;
     setIsShowAddNode(true);
@@ -56,7 +57,12 @@ export default memo(function MenuManage() {
     })
   }
   function handleAddNode () {
-    console.log(addNodeRef);
+    const { nodeForm, validateForm } = addNodeRef.current;
+    validateForm().then(res => {
+      systemApi.addNode(nodeForm).then(res => {
+
+      })
+    })
   }
   return (
     <StyleWrap>
@@ -91,7 +97,7 @@ export default memo(function MenuManage() {
         </div>
       </div>
       <Modal
-        title="添加子节点" 
+        title="添加节点" 
         visible={isShowAddNode} 
         onOk={handleAddNode} 
         onCancel={() => { setIsShowAddNode(false) }}

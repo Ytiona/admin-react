@@ -1,14 +1,14 @@
 import { Map } from 'immutable';
 
-const defaultState = Map({
+const initState = Map({
   token: '',
   userInfo: {},
   menuList: []
 })
 
-function reducer(state = defaultState, { type, data }) {
-  switch(type) {
-    case 'setUserInfo': 
+function reducer(state = initState, { type, data }) {
+  switch (type) {
+    case 'setUserInfo':
       return state.set('userInfo', data);
     case 'setToken':
       window.lStore.set('token', data);
