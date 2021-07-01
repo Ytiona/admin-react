@@ -1,51 +1,68 @@
 import React, { memo, useState, useRef } from 'react';
-import { useSelector } from 'react-redux';
 import { 
-  Button, Space, Tree, Row, Col,
-  Modal
+  Button, Space,
+  Modal, Row, Col
 } from 'antd';
 import { 
   PlusOutlined, DeleteOutlined, 
-  FolderOpenOutlined, FileOutlined, 
-  GoldOutlined, EditOutlined,
+  EditOutlined,
   ReloadOutlined, ExclamationCircleOutlined
 } from '@ant-design/icons';
-import { treeIterator } from '@/utils/tree';
-import { StyleWrap } from './style';
-import NodeForm from './node-form';
 import * as systemApi from '@/api/system';
+import { StyleWrap } from './style';
+import MenuList from './menu-list';
+import NodeForm from './node-form';
+import { useMenuList } from './hooks';
 
-const treeIconMap = {
-  0: <FolderOpenOutlined />,
-  1: <FileOutlined />,
-  2: <GoldOutlined />
+function useAddNode() {
+  const addNodeRef = useRef();
+  const [parentNode, setParentNode] = useState();
+  const [selectedNode, setSelectedNode] = useState({});
+  const [isShowAddNode, setIsShowAddNode] = useState(false);
+  function handleAddChildNode() {
+    setParentNode(selectedNode);
+    setIsShowAddNode(true);
+  }
+  function handleAddTopNode() {
+    setParentNode();
+    setIsShowAddNode(true);
+  }
+  function handleAddNode() {
+    const { nodeForm, validateForm } = addNodeRef.current;
+    validateForm().then(res => {
+      systemApi.addNode(nodeForm).then(res => {
+        setIsShowAddNode(false);
+      })
+    })
+  }
+  return {
+    addNodeRef,
+    parentNode, 
+    setParentNode,
+    isShowAddNode, 
+    setIsShowAddNode,
+    handleAddChildNode,
+    handleAddTopNode,
+    handleAddNode,
+    selectedNode,
+    setSelectedNode
+  }
 }
 
 export default memo(function MenuManage() {
-  const { menuList } = useSelector(state => ({
-    menuList: 
-      treeIterator(
-        state.getIn(['user', 'menuList']), 
-        item => {
-          item.title = item.name;
-          item.key = item.id;
-          item.icon = treeIconMap[item.type]
-        }
-      )
-  }))
-  const [isShowAddNode, setIsShowAddNode] = useState(false);
-  const parentId = useRef(null);
-  const selectedParentId = useRef(null);
-  const addNodeRef = useRef();
-
-  function handleAddChildNode () {
-    parentId.current = selectedParentId;
-    setIsShowAddNode(true);
-  }
-  function handleAddTopNode () {
-    parentId.current = null;
-    setIsShowAddNode(true);
-  }
+  const { menuList } = useMenuList();
+  const {
+    addNodeRef,
+    parentNode,
+    isShowAddNode, 
+    setIsShowAddNode,
+    handleAddChildNode,
+    handleAddTopNode,
+    handleAddNode,
+    selectedNode,
+    setSelectedNode
+  } = useAddNode();
+  
   function handleBatchDelNode () {
     Modal.confirm({
       title: '温馨提示',
@@ -56,40 +73,27 @@ export default memo(function MenuManage() {
       }
     })
   }
-  function handleAddNode () {
-    const { nodeForm, validateForm } = addNodeRef.current;
-    validateForm().then(res => {
-      systemApi.addNode(nodeForm).then(res => {
 
-      })
-    })
-  }
   return (
     <StyleWrap>
       <Space>
-        <Button 
-          type="primary" 
-          icon={<PlusOutlined />} 
-          onClick={handleAddChildNode}
-        >
-          添加子节点
-        </Button>
+        <Button type="primary" icon={<PlusOutlined />} onClick={handleAddChildNode}>添加子节点</Button>
         <Button icon={<PlusOutlined />} onClick={handleAddTopNode}>添加顶层节点</Button>
         <Button icon={<DeleteOutlined />} onClick={handleBatchDelNode}>批量删除</Button>
       </Space>
       <div className="main">
         <div className="main-tree">
-          <Tree
+          <MenuList
             checkable
             showIcon
             showLine={{showLeafIcon: false}}
-            treeData={menuList}
             style={{ color: '#515a6e' }}
-            onSelect={key => selectedParentId.current = key}
+            menuList={menuList}
+            onSelect={(key, { node }) => setSelectedNode(node)}
           />
         </div>
         <div className="main-detail">
-          <NodeForm/>
+          <NodeForm node={selectedNode} isEdit/>
           <Row gutter={8} justify="center">
             <Col><Button type="primary" htmlType="submit" icon={<EditOutlined />}>修改并保存</Button></Col>
             <Col><Button icon={<ReloadOutlined />}>重置</Button></Col>
@@ -100,9 +104,9 @@ export default memo(function MenuManage() {
         title="添加节点" 
         visible={isShowAddNode} 
         onOk={handleAddNode} 
-        onCancel={() => { setIsShowAddNode(false) }}
+        onCancel={() => { setIsShowAddNode(false) } }
       >
-        <NodeForm ref={addNodeRef}/>
+        <NodeForm ref={addNodeRef} parentNode={parentNode}/>
       </Modal>
     </StyleWrap>
   )

@@ -2,7 +2,7 @@ import React, { memo, useEffect, useState, Suspense } from 'react'
 import { Redirect, Route, Link } from 'react-router-dom';
 import { useSelector, shallowEqual, useDispatch } from 'react-redux';
 import { Layout, Menu } from 'antd';
-import Icon from '@/components/icon';
+// import Icon from '@/components/icon';
 import { LayoutWrap } from './style';
 import * as userApi from '@/api/user';
 import AppFooter from 'components/app-footer';

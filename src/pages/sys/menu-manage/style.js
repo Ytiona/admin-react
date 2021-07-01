@@ -16,7 +16,7 @@ export const StyleWrap = styled.div`
       border-right: 1px solid #eee;
     }
     .main-detail {
-      min-width: 580px;
+      min-width: 520px;
     }
   }
 `;
