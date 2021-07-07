@@ -1,16 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
+import { useSelector, useDispatch, shallowEqual } from 'react-redux';
 import * as systemApi from '@/api/system';
 
 export function useMenuList() {
-  const [menuList, setMenuList] = useState([]);
-  function getMenuList() {
+  const menuList = useSelector(state => state.getIn(['system', 'menuList']), shallowEqual);
+  const dispatch = useDispatch();
+  const getMenuList = useCallback(() => {
     systemApi.getMenuList().then(res => {
       const { menuTree = [] } = res.result || {};
-      setMenuList(menuTree.filter(item => item.type !== '2'));
+      dispatch({ type: 'setSystemMenuList', data: menuTree.filter(item => item.type !== '2') })
     })
-  }
+  }, [dispatch])
   useEffect(() => {
     getMenuList();
-  }, [])
+  }, [getMenuList])
   return { menuList, getMenuList };
 }

@@ -13,7 +13,7 @@ function reducer(state = initState, { type, data }) {
     case 'setToken':
       window.lStore.set('token', data);
       return state.set('token', data);
-    case 'setMenuList':
+    case 'setUserMenuList':
       window.lStore.set('menuList', data);
       return state.set('menuList', data);
     case 'logout':

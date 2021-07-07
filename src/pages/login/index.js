@@ -6,7 +6,7 @@ import { useHistory } from 'react-router-dom';
 import { useRequest } from 'ahooks';
 import { LoginWrap } from './style';
 import * as userApi from '@/api/user';
-import AppFooter from 'components/app-footer';
+import AppFooter from '@/components/app-footer';
 
 export default memo(function Login() {
   const dispatch = useDispatch();
@@ -28,7 +28,7 @@ export default memo(function Login() {
         }
       }
     }).then(res => {
-      dispatch({ type: 'setToken', data: res.result });
+      dispatch({ type: 'setToken', data: res.result});
       history.push('/home');
     })
   }

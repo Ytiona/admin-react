@@ -1,6 +1,25 @@
-import React, { memo } from 'react'
-import * as AntdIcon from '@ant-design/icons';
+import React, { memo } from 'react';
+import PropTypes from 'prop-types';
+import * as AntdIcons from '@ant-design/icons';
 
-export default memo(function Icon({ name, ...props }) {
-  return React.createElement(AntdIcon[name])
+const Icon = memo(function ({ name, ...props }) {
+  return(
+    <>
+      {
+        AntdIcons[name] ?
+        React.createElement(AntdIcons[name], props)
+        : null
+      }
+    </>
+  )
 })
+
+Icon.propTypes = {
+  name: PropTypes.string.isRequired
+}
+
+Icon.defaultProps = {
+  name: ''
+}
+
+export default Icon;

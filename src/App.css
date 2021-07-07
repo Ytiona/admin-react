@@ -1,5 +1,6 @@
 @import '~normalize.css';
 @import '~antd/dist/antd.css';
+@import '~@/common/style/common.css';
 
 #root {
   height: 100%;

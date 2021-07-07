@@ -9,6 +9,7 @@ import {
   ApartmentOutlined, SmileOutlined
 } from '@ant-design/icons';
 import IconSelector from '@/components/icon-selector';
+import TypeIcon from '@/components/type-icon';
 import MenuList from './menu-list';
 import { useMenuList } from './hooks';
 
@@ -100,26 +101,26 @@ function useSelParent({ updateNodeForm }) {
   return { isShowSelParent, setIsShowSelParent, onSelectParent }
 }
 
-function useIconSelector() {
-
-}
-
 const NodeForm = function NodeForm({ parentNode, node, isEdit }, ref) {
   const { nodeForm, updateNodeForm, updateFormByInp } = useNodeForm();
   const { renderByType, onChangeNodeType } = useNodeType({ updateFormByInp });
   const { isShowSelParent, setIsShowSelParent, onSelectParent } = useSelParent({ updateNodeForm });
 
+  const [isShowSelIcon, setIsShowSelIcon] = useState(false);
+
   useEffect(() => {
-    const { id, name } = parentNode || {};
+    const { id, name, node_path } = parentNode || {};
     updateNodeForm({
       parent_id: id,
-      parent_name: name
+      parent_name: name,
+      node_path: node_path
     })
   }, [parentNode, updateNodeForm])
 
   useEffect(() => {
     const _node = node || {};
     updateNodeForm({
+      ...initNodeForm,
       ..._node,
       icon: _node.iconName
     })
@@ -130,15 +131,30 @@ const NodeForm = function NodeForm({ parentNode, node, isEdit }, ref) {
     formRef.setFieldsValue(nodeForm);
   }, [nodeForm, formRef])
 
+  function onSelectIcon(name, type) {
+    updateNodeForm({
+      icon: name,
+      icon_type: type
+    })
+    setIsShowSelIcon(false);
+  }
+
   useImperativeHandle(ref, () => ({
+    setIsShowSelParent,
     nodeForm: nodeForm,
     validateForm: formRef.validateFields
   }))
 
   return (
     <>
-      <Modal visible={true} width={1000} title="选择图标" footer={null}>
-        <IconSelector />
+      <Modal 
+        width={1000} 
+        title="选择图标" 
+        footer={null} 
+        visible={isShowSelIcon} 
+        onCancel={() => { setIsShowSelIcon(false) }}
+      >
+        <IconSelector onSelect={onSelectIcon}/>
       </Modal>
       <Form labelCol={{ span: 4 }} wrapperCol={{ span: 20 }} form={formRef}>
         <Form.Item label="类型" name="type">
@@ -153,15 +169,15 @@ const NodeForm = function NodeForm({ parentNode, node, isEdit }, ref) {
         {
           isEdit ?
             null :
-            <Form.Item label="父级">
+            <Form.Item label="父级" name="parent_name">
               <Row gutter={10}>
                 <Col flex="1">
                   <Input
                     placeholder="请选择父级"
                     readOnly
                     name="parent_name"
-                    onChange={updateFormByInp}
                     value={nodeForm.parent_name}
+                    onChange={updateFormByInp}
                   />
                 </Col>
                 <Col>
@@ -187,9 +203,16 @@ const NodeForm = function NodeForm({ parentNode, node, isEdit }, ref) {
         <Form.Item label="图标" name="icon">
           <Row gutter={10}>
             <Col flex="1">
-              <Input readOnly placeholder="请选择图标" name="icon" onChange={updateFormByInp} value={nodeForm.icon} />
+              <Input 
+                readOnly 
+                placeholder="请选择图标" 
+                name="icon" 
+                onChange={updateFormByInp} 
+                value={nodeForm.icon} 
+                suffix={<TypeIcon name={nodeForm.icon || ''} type={nodeForm.icon_type} style={{ fontSize: '16px', color: '#333' }}/>} 
+              />
             </Col>
-            <Col><Button icon={<SmileOutlined />}>选择图标</Button></Col>
+            <Col><Button icon={<SmileOutlined />} onClick={() => { setIsShowSelIcon(true) }}>选择图标</Button></Col>
           </Row>
 
         </Form.Item>
@@ -217,7 +240,7 @@ const NodeForm = function NodeForm({ parentNode, node, isEdit }, ref) {
             </Form.Item>
           )
         }
-        <Form.Item label="排序值" name="order_val">
+        <Form.Item label="排序值" name="order_val" rules={[{ required: true, message: '请输入排序值' }]}>
           <InputNumber
             placeholder="请输入排序值"
             style={{ width: '100%' }}

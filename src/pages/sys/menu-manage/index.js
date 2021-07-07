@@ -1,20 +1,22 @@
 import React, { memo, useState, useRef } from 'react';
-import { 
+import {
   Button, Space,
-  Modal, Row, Col
+  Modal, Row,
+  message
 } from 'antd';
-import { 
-  PlusOutlined, DeleteOutlined, 
-  EditOutlined,
-  ReloadOutlined, ExclamationCircleOutlined
+import {
+  PlusOutlined, DeleteOutlined,
+  EditOutlined, RedoOutlined,
+  ExclamationCircleOutlined
 } from '@ant-design/icons';
 import * as systemApi from '@/api/system';
 import { StyleWrap } from './style';
 import MenuList from './menu-list';
 import NodeForm from './node-form';
 import { useMenuList } from './hooks';
+import useUserMenus from '@/hooks/use-user-menus';
 
-function useAddNode() {
+function useAddNode({ getMenuList }) {
   const addNodeRef = useRef();
   const [parentNode, setParentNode] = useState();
   const [selectedNode, setSelectedNode] = useState({});
@@ -27,86 +29,163 @@ function useAddNode() {
     setParentNode();
     setIsShowAddNode(true);
   }
+  function closeAddNodeModal() {
+    const { setIsShowSelParent } = addNodeRef.current;
+    setIsShowAddNode(false);
+    setIsShowSelParent(false);
+  }
+
   function handleAddNode() {
     const { nodeForm, validateForm } = addNodeRef.current;
     validateForm().then(res => {
       systemApi.addNode(nodeForm).then(res => {
-        setIsShowAddNode(false);
+        getMenuList();
+        closeAddNodeModal();
       })
     })
   }
   return {
     addNodeRef,
-    parentNode, 
+    parentNode,
     setParentNode,
-    isShowAddNode, 
+    isShowAddNode,
     setIsShowAddNode,
     handleAddChildNode,
     handleAddTopNode,
     handleAddNode,
     selectedNode,
-    setSelectedNode
+    setSelectedNode,
+    closeAddNodeModal
+  }
+}
+
+function useUpdateNode({ getMenuList }) {
+  const updateNodeRef = useRef();
+  const [updateNodeLoading, setUpdateNodeLoading] = useState(false);
+  function onUpdateNode() {
+    const { nodeForm, validateForm } = updateNodeRef.current;
+    if(window.isEmpty(nodeForm.id)) return message.error('请选择节点');
+    validateForm().then(res => {
+      Modal.confirm({
+        title: '温馨提示',
+        content: '确定更新该节点？',
+        onOk() {
+          setUpdateNodeLoading(true);
+          systemApi.updateNode(nodeForm).then(res => {
+            getMenuList();
+          }).finally(() => {
+            setUpdateNodeLoading(false);
+          })
+        }
+      })
+    })
+  }
+  return {
+    updateNodeRef,
+    updateNodeLoading,
+    onUpdateNode
   }
 }
 
 export default memo(function MenuManage() {
-  const { menuList } = useMenuList();
+  const { menuList, getMenuList } = useMenuList();
+  const checkedMenus = useRef();
+
   const {
     addNodeRef,
     parentNode,
-    isShowAddNode, 
-    setIsShowAddNode,
+    isShowAddNode,
     handleAddChildNode,
     handleAddTopNode,
     handleAddNode,
     selectedNode,
-    setSelectedNode
-  } = useAddNode();
-  
-  function handleBatchDelNode () {
+    setSelectedNode,
+    closeAddNodeModal
+  } = useAddNode({ getMenuList });
+
+  const {
+    updateNodeRef,
+    updateNodeLoading,
+    onUpdateNode
+  } = useUpdateNode({ getMenuList });
+
+  function handleBatchDelNode() {
+    if((checkedMenus?.current?.checked || []).length === 0) {
+      return message.error('请选择节点');
+    }
     Modal.confirm({
       title: '温馨提示',
       icon: <ExclamationCircleOutlined />,
       content: '确定删除选中的节点？',
       onOk() {
-        console.log('confirm delete!');
+        systemApi.batchDeleteNode({
+          nodeIds: checkedMenus.current.checked
+        }).then(res => {
+          getMenuList();
+          checkedMenus.current = null;
+        })
       }
     })
   }
 
+  const { getUserMenuList } = useUserMenus();
+  const [refreshUserMenuLoading, setRefreshUserMenuLoading] = useState();
+
+  function onRefreshUserMenu() {
+    setRefreshUserMenuLoading(true);
+    getUserMenuList().finally(() => {
+      setRefreshUserMenuLoading(false);
+    })
+  }
+
+  function onSelectNode(keys, { node }) {
+    setSelectedNode(keys.length ?  { ...node, icon: node.iconName} : {})
+  }
+
   return (
     <StyleWrap>
-      <Space>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleAddChildNode}>添加子节点</Button>
-        <Button icon={<PlusOutlined />} onClick={handleAddTopNode}>添加顶层节点</Button>
-        <Button icon={<DeleteOutlined />} onClick={handleBatchDelNode}>批量删除</Button>
-      </Space>
+      <Row justify="space-between">
+        <Space>
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleAddChildNode}>添加子节点</Button>
+          <Button icon={<PlusOutlined />} onClick={handleAddTopNode}>添加顶层节点</Button>
+          <Button icon={<DeleteOutlined />} onClick={handleBatchDelNode}>批量删除</Button>
+        </Space>
+        <Button type="primary" icon={<RedoOutlined />} onClick={onRefreshUserMenu} loading={refreshUserMenuLoading}>刷新用户菜单</Button>
+      </Row>
+      
       <div className="main">
         <div className="main-tree">
           <MenuList
             checkable
             showIcon
-            showLine={{showLeafIcon: false}}
+            showLine={{ showLeafIcon: false }}
             style={{ color: '#515a6e' }}
             menuList={menuList}
-            onSelect={(key, { node }) => setSelectedNode(node)}
+            checkStrictly={true}
+            onCheck={checkedKeys => { checkedMenus.current = checkedKeys;}}
+            onSelect={onSelectNode}
           />
         </div>
         <div className="main-detail">
-          <NodeForm node={selectedNode} isEdit/>
+          <NodeForm node={selectedNode} isEdit ref={updateNodeRef} />
           <Row gutter={8} justify="center">
-            <Col><Button type="primary" htmlType="submit" icon={<EditOutlined />}>修改并保存</Button></Col>
-            <Col><Button icon={<ReloadOutlined />}>重置</Button></Col>
+            <Button
+              type="primary"
+              disabled={!selectedNode.id}
+              icon={<EditOutlined />}
+              onClick={onUpdateNode}
+              loading={updateNodeLoading}
+            >修改并保存</Button>
           </Row>
         </div>
       </div>
       <Modal
-        title="添加节点" 
-        visible={isShowAddNode} 
-        onOk={handleAddNode} 
-        onCancel={() => { setIsShowAddNode(false) } }
+        title="添加节点"
+        visible={isShowAddNode}
+        onOk={handleAddNode}
+        onCancel={closeAddNodeModal}
       >
-        <NodeForm ref={addNodeRef} parentNode={parentNode}/>
+        <NodeForm ref={addNodeRef} parentNode={parentNode} />
       </Modal>
     </StyleWrap>
   )

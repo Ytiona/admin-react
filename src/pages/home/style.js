@@ -35,10 +35,11 @@ export const LayoutWrap = styled.div`
     box-shadow: 0 1px 4px rgb(0 21 41 / 8%);
     background-color: #fff;
   }
-  .uber-content {
+  .uber-container {
     margin: 62px 14px 0 14px;
-    padding: 20px;
-    background-color: #fff;
+    .uber-content {
+      overflow: auto;
+    }
   }
   .footer {
     padding: 0;

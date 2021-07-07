@@ -1,3 +1,5 @@
+import { isEmpty } from '@/utils/helpers';
+
 JSON.safaParse = function (str) {
   if(typeof str === 'string') {
     return JSON.parse(str);
@@ -19,3 +21,5 @@ window.lStore = {
     return localStorage.clear();
   }
 }
+
+window.isEmpty = isEmpty;
