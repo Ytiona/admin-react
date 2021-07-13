@@ -1,4 +1,4 @@
-import React, { memo, Suspense } from 'react'
+import React, { memo, Suspense } from 'react';
 import { Redirect, Link } from 'react-router-dom';
 import { Layout, Menu, Card } from 'antd';
 import Icon from '@/components/icon';
@@ -6,12 +6,14 @@ import { LayoutWrap } from './style';
 import AppFooter from '@/components/app-footer';
 import AppLoading from '@/components/app-loading';
 import useUserMenus from '@/hooks/use-user-menus';
+import HeaderContent from './header-content';
 
 const { Header, Content, Footer, Sider } = Layout;
 const { SubMenu } = Menu;
 
 export default memo(function Home({ location }) {
   const { token, menuList, Routes } = useUserMenus();
+
   return (
     <>
       {
@@ -22,19 +24,21 @@ export default memo(function Home({ location }) {
                 <div className="logo">
                   <h1>LY Admin</h1>
                 </div>
-                <Menu 
-                  theme="dark" 
+                <Menu
+                  theme="dark"
                   mode="inline"
                   defaultSelectedKeys={[location.pathname]}
                 >{generateMenu(menuList)}</Menu>
               </Sider>
               <Layout className="uber-main">
-                <Header className="header"></Header>
+                <Header className="header">
+                  <HeaderContent />
+                </Header>
                 <Content className="uber-container">
                   <Card className="uber-content">
                     {
-                      <Suspense fallback={<AppLoading/>}>
-                        { 
+                      <Suspense fallback={<AppLoading />}>
+                        {
                           Routes
                         }
                       </Suspense>
@@ -56,19 +60,19 @@ export default memo(function Home({ location }) {
 function generateMenu(menuList) {
   return menuList.map(item => {
     if (item.type === '0') {
-      return <SubMenu 
-        key={item.node_path} 
-        icon={<Icon name={item.icon} className="menu-icon"/>} 
+      return <SubMenu
+        key={item.path}
+        icon={<Icon name={item.icon} className="menu-icon" />}
         title={item.name}
       >
         {item.children && item.children.length > 0 ? generateMenu(item.children) : null}
       </SubMenu>
     }
-    return <Menu.Item 
-      key={item.node_path} 
-      icon={<Icon name={item.icon} className="menu-icon"/>}
+    return <Menu.Item
+      key={item.path}
+      icon={<Icon name={item.icon} className="menu-icon" />}
     >
-      <Link to={item.node_path} replace>{item.name}</Link>
+      <Link to={item.path} replace>{item.name}</Link>
     </Menu.Item>;
   })
 }

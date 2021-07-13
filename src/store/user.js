@@ -9,6 +9,7 @@ const initState = Map({
 function reducer(state = initState, { type, data }) {
   switch (type) {
     case 'setUserInfo':
+      window.lStore.set('userInfo', data);
       return state.set('userInfo', data);
     case 'setToken':
       window.lStore.set('token', data);
@@ -19,6 +20,7 @@ function reducer(state = initState, { type, data }) {
     case 'logout':
       window.lStore.remove('token');
       window.lStore.remove('menuList');
+      window.lStore.remove('userInfo');
       return state.set('menuList', []).set('token', '');
     default:
       return state;

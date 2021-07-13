@@ -43,12 +43,11 @@ const initNodeForm = {
   code: '',
   icon: '',
   icon_type: '0',
-  node_path: '',
+  path: '',
   component_path: '',
   order_val: null,
   remarks: '',
-  enabled: true,
-  request_addr: ''
+  enabled: true
 }
 function nodeFormReducer(state, action) {
   const result = { ...state, ...action };
@@ -94,7 +93,7 @@ function useSelParent({ updateNodeForm }) {
     updateNodeForm({
       parent_id: node.id,
       parent_name: node.name,
-      node_path: node.node_path
+      path: node.path
     })
     setIsShowSelParent(false);
   }
@@ -109,11 +108,11 @@ const NodeForm = function NodeForm({ parentNode, node, isEdit }, ref) {
   const [isShowSelIcon, setIsShowSelIcon] = useState(false);
 
   useEffect(() => {
-    const { id, name, node_path } = parentNode || {};
+    const { id, name, path } = parentNode || {};
     updateNodeForm({
+      path,
       parent_id: id,
-      parent_name: name,
-      node_path: node_path
+      parent_name: name
     })
   }, [parentNode, updateNodeForm])
 
@@ -140,8 +139,8 @@ const NodeForm = function NodeForm({ parentNode, node, isEdit }, ref) {
   }
 
   useImperativeHandle(ref, () => ({
+    nodeForm,
     setIsShowSelParent,
-    nodeForm: nodeForm,
     validateForm: formRef.validateFields
   }))
 
@@ -219,9 +218,9 @@ const NodeForm = function NodeForm({ parentNode, node, isEdit }, ref) {
         {
           renderByType(['0', '1'],
 
-            <Form.Item label="路径" name="node_path" rules={[{ required: true, message: '请输入路径' }]}>
+            <Form.Item label="路径" name="path" rules={[{ required: true, message: '请输入路径' }]}>
               <Tooltip placement="right" title="须唯一">
-                <Input placeholder="请输入路径" name="node_path" onChange={updateFormByInp} value={nodeForm.node_path} />
+                <Input placeholder="请输入路径" name="path" onChange={updateFormByInp} value={nodeForm.path} />
               </Tooltip>
             </Form.Item>
           )
@@ -230,13 +229,6 @@ const NodeForm = function NodeForm({ parentNode, node, isEdit }, ref) {
           renderByType('1',
             <Form.Item label="前端组件" name="component_path">
               <Input placeholder="请输入前端组件路径(不填则使用路径值)" name="component_path" onChange={updateFormByInp} />
-            </Form.Item>
-          )
-        }
-        {
-          renderByType('2',
-            <Form.Item label="接口地址" name="request_addr">
-              <Input placeholder="请输入请求接口地址" name="request_addr" onChange={updateFormByInp} />
             </Form.Item>
           )
         }

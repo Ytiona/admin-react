@@ -17,9 +17,9 @@ export default function useUserMenus() {
       setRoutes(routes.map(item => {
         return <Route
           exact
-          key={item.node_path}
-          path={item.node_path}
-          component={React.lazy(() => import(`@/pages${item.component_path || item.node_path}`))}
+          key={item.path}
+          path={item.path}
+          component={React.lazy(() => import(`@/pages${item.component_path || item.path}`))}
         />
       }));
       dispatch({ type: 'setUserMenuList', data: data.menuTree });

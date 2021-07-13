@@ -9,7 +9,7 @@ function resolve (dir) {
 
 function buildDir(data, validateDir, baseUrl) {
   data.forEach(item => {
-    const dir = resolve(baseUrl + item.node_path);
+    const dir = resolve(baseUrl + item.path);
     if(fs.existsSync(dir)) return; //已创建
     if(validateDir(item)) {
       fs.mkdir(dir, {

@@ -1,9 +1,9 @@
-import React, { memo, useState } from 'react'
+import React, { memo, useRef } from 'react'
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { Tabs, Space, Input, Button } from 'antd';
 import { useDispatch } from 'react-redux';
 import { useHistory } from 'react-router-dom';
-import { useRequest } from 'ahooks';
+import { useRequest } from '@/hooks/base-hooks';
 import { LoginWrap } from './style';
 import * as userApi from '@/api/user';
 import AppFooter from '@/components/app-footer';
@@ -11,15 +11,15 @@ import AppFooter from '@/components/app-footer';
 export default memo(function Login() {
   const dispatch = useDispatch();
   const history = useHistory();
-  const [userName, setUserName] = useState('');
-  const [password, setPassword] = useState('');
+  const userName = useRef('');
+  const password = useRef('');
   const { loading: loginLoading, run: login } = useRequest(loginRequest, {
     manual: true
   });
   function loginRequest() {
     return userApi.login({
-      userName,
-      password,
+      userName: userName.current,
+      password: password.current,
       $config: { 
         loadingConfig: '正在登录...', 
         successTipType: 'notify',
@@ -29,6 +29,7 @@ export default memo(function Login() {
       }
     }).then(res => {
       dispatch({ type: 'setToken', data: res.result});
+      dispatch({ type: 'setUserInfo', data: res.userInfo});
       history.push('/home');
     })
   }
@@ -49,7 +50,7 @@ export default memo(function Login() {
                 prefix={<UserOutlined className="inp-icon" />}
                 allowClear
                 className="f-item"
-                onChange={e => setUserName(e.target.value)}
+                onChange={e => userName.current = e.target.value}
                 onPressEnter={login}
               />
               <Input.Password 
@@ -57,7 +58,7 @@ export default memo(function Login() {
                 placeholder="密码"
                 prefix={<LockOutlined className="inp-icon" />} 
                 className="f-item"
-                onChange={e => setPassword(e.target.value)}
+                onChange={e => password.current = e.target.value}
                 onPressEnter={login}
               />
             </Space>
