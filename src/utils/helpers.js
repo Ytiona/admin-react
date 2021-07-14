@@ -110,3 +110,9 @@ export function usePromise() {
     reject
   }
 }
+
+export function getInnerText(htmlStr) {
+  const div = document.createElement('div');
+  div.innerHTML = htmlStr;
+  return div.innerText;
+}

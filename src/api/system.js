@@ -22,3 +22,5 @@ export const updateRole = post('/sys/updateRole');
 export const roleMenuAuth = post('/sys/roleMenuAuth');
 
 export const getRoleMenu = get('/sys/getRoleMenu');
+
+export const getApiList = get('/sys/getApiList');

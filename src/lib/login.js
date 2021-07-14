@@ -1,7 +1,5 @@
 import store from '@/store';
 
-const token = window.lStore.get('token');
+store.dispatch({ type: 'setToken', data: window.lStore.get('token') });
 
-if(token) {
-  store.dispatch({ type: 'setToken', data: token });
-}
+store.dispatch({ type: 'setUserInfo', data: window.lStore.get('userInfo') });

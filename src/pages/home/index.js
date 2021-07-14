@@ -13,7 +13,6 @@ const { SubMenu } = Menu;
 
 export default memo(function Home({ location }) {
   const { token, menuList, Routes } = useUserMenus();
-
   return (
     <>
       {
