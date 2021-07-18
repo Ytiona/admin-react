@@ -213,7 +213,6 @@ const NodeForm = function NodeForm({ parentNode, node, isEdit }, ref) {
             </Col>
             <Col><Button icon={<SmileOutlined />} onClick={() => { setIsShowSelIcon(true) }}>选择图标</Button></Col>
           </Row>
-
         </Form.Item>
         {
           renderByType(['0', '1'],

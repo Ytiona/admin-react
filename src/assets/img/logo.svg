@@ -1,0 +1,28 @@
+<svg id="组_3" data-name="组 3" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="600" height="600" viewBox="0 0 600 600">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: url(#linear-gradient);
+      }
+
+      .cls-2 {
+        fill: #fff;
+      }
+
+      .cls-3 {
+        fill: #ff0030;
+      }
+    </style>
+    <linearGradient id="linear-gradient" x1="132.646" y1="590" x2="467.51" y2="10" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00f0ff"/>
+      <stop offset="0.449" stop-color="#0072ff"/>
+      <stop offset="1" stop-color="#3c00ff"/>
+    </linearGradient>
+  </defs>
+  <g id="组_4" data-name="组 4">
+    <path id="圆角矩形_2" data-name="圆角矩形 2" class="cls-1" d="M300,10h0.156a290,290,0,0,1,290,290V590a0,0,0,0,1,0,0H300A290,290,0,0,1,10,300v0A290,290,0,0,1,300,10Z"/>
+    <circle id="椭圆_1_拷贝_7" data-name="椭圆 1 拷贝 7" class="cls-2" cx="246" cy="191" r="107"/>
+    <circle id="椭圆_1_拷贝_6" data-name="椭圆 1 拷贝 6" class="cls-3" cx="246.063" cy="191" r="51"/>
+    <circle id="椭圆_1_拷贝_8" data-name="椭圆 1 拷贝 8" class="cls-2" cx="137.5" cy="426.5" r="36.5"/>
+  </g>
+</svg>

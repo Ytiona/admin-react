@@ -18,8 +18,17 @@ export const LoginWrap = styled.div`
     .top {
       text-align: center;
       margin-bottom: 30px;
-      .title {
-        margin-bottom: 8px;
+      .logo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 10px;
+        .txt {
+          margin-left: 10px;
+          font-size: 28px;
+          font-weight: bold;
+          color: #000;
+        }
       }
       .desc {
         color: ${grey[2]}

@@ -38,6 +38,7 @@ export function useRequest(request, {
   const run = useCallback(() => {
     setLoading(true);
     return request().finally(() => {
+      console.log(unmounted);
       !unmounted.current && setLoading(false);
     })
   }, [request])

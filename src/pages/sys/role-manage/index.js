@@ -3,6 +3,7 @@ import { Button, Switch, Space, Modal, Tag, message } from 'antd';
 import { CloseOutlined, CheckOutlined } from '@ant-design/icons';
 import { useBool } from '@/hooks/base-hooks';
 import AuthMenu from './auth-menu';
+import AuthApi from './auth-api';
 import PageTable from '@/components/page-table';
 import RoleModal from './role-modal';
 import * as systemApi from '@/api/system';
@@ -18,10 +19,16 @@ export default memo(function RoleManage() {
   } = useBool();
 
   const {
+    state: authApiVisible,
+    setTrue: openAuthApi,
+    setFalse: closeAuthApi
+  } = useBool();
+
+  const {
     state: addRoleVisible,
     setFalse: closeAddRole,
     setTrue: openAddRole
-  } = useBool(false);
+  } = useBool();
 
   const {
     state: editRoleVisible,
@@ -98,7 +105,7 @@ export default memo(function RoleManage() {
       render: (text, record) => (
         <>
           <Button size="small" type="link" onClick={operateRole(openAuthMenu, record)}>菜单权限</Button>
-          <Button size="small" type="link">接口权限</Button>
+          <Button size="small" type="link" onClick={operateRole(openAuthApi, record)}>接口权限</Button>
           <Button
             size="small"
             type="link"
@@ -124,15 +131,14 @@ export default memo(function RoleManage() {
             <Button onClick={() => deleteRole(selectRoles.current)}>批量删除</Button>
           </Space>
         }
-        tableConfig={{
-          rowSelection: {
-            fixed: true,
-            columnWidth: 50,
-            onChange: (keys, rows) => selectRoles.current = rows
-          }
-        }}
+        rowSelection={{
+          fixed: true,
+          columnWidth: 50,
+          onChange: (keys, rows) => selectRoles.current = rows
+        }} 
       />
       <AuthMenu visible={authMenuVisible} setHide={closeAuthMenu} role={currentRole}/>
+      <AuthApi visible={authApiVisible} setHide={closeAuthApi} role={currentRole}/>
       <RoleModal
         visible={addRoleVisible}
         setHide={closeAddRole}

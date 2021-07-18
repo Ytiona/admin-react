@@ -8,7 +8,7 @@ export const ApiManageWrap = styled.div`
     width: 300px;
     border: 1px solid ${gray[1]};
     /* box-shadow: 0 1px 4px rgb(0 21 41 / 8%); */
-    border-radius: 10px;
+    border-radius: 4px;
     .ant-menu-submenu-title {
       font-size: 14px;
       font-weight: bold;
@@ -19,18 +19,31 @@ export const ApiManageWrap = styled.div`
     overflow: auto;
     max-height: calc(100vh - 62px - 50px - 62px);
     .item {
-      padding: 30px;
-      border-bottom: 1px dashed ${gray[1]};
+      padding: 30px 0;
+      margin: 0 30px;
       .top {
         display: flex;
         align-items: flex-end;
         margin-bottom: 10px;
         .name {
+          line-height: 1;
+          margin-right: 10px;
           font-size: 18px;
         }
-        .addr {
-          margin-left: 10px;
+        .desc {
+          line-height: 1;
+          font-size: 12px;
           color: ${gray[2]};
+        }
+      }
+      .api {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        .addr {
+          font-size: 14px;
+          color: ${gray[3]};
         }
         .copy-btn {
           padding: 4px;

@@ -21,7 +21,8 @@ export default memo(function Home({ location }) {
             <Layout className="layout">
               <Sider className="sider">
                 <div className="logo">
-                  <h1>LY Admin</h1>
+                  <img src={require("@/assets/img/logo.svg").default} alt="" />
+                  <span className="txt">Yzm Admin</span>
                 </div>
                 <Menu
                   theme="dark"

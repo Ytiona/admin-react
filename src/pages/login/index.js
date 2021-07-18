@@ -11,14 +11,14 @@ import AppFooter from '@/components/app-footer';
 export default memo(function Login() {
   const dispatch = useDispatch();
   const history = useHistory();
-  const userName = useRef('');
+  const account = useRef('');
   const password = useRef('');
   const { loading: loginLoading, run: login } = useRequest(loginRequest, {
     manual: true
   });
   function loginRequest() {
     return userApi.login({
-      userName: userName.current,
+      account: account.current,
       password: password.current,
       $config: { 
         loadingConfig: '正在登录...', 
@@ -38,7 +38,10 @@ export default memo(function Login() {
     <LoginWrap>
       <div className="main">
         <div className="top">
-          <h1 className="title">LY Admin</h1>
+          <div className="logo">
+            <img src={require("@/assets/img/logo.svg").default} alt="" height={48}/>
+            <span className="txt">Yzm Admin</span>
+          </div>
           <p className="desc">著名前端工程师Li Yu倾力打造</p>
         </div>
         <Tabs centered>
@@ -46,11 +49,11 @@ export default memo(function Login() {
             <Space direction="vertical" className="wrap" size="large">
               <Input
                 size="large"
-                placeholder="用户名"
+                placeholder="账号"
                 prefix={<UserOutlined className="inp-icon" />}
                 allowClear
                 className="f-item"
-                onChange={e => userName.current = e.target.value}
+                onChange={e => account.current = e.target.value}
                 onPressEnter={login}
               />
               <Input.Password 

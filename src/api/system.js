@@ -24,3 +24,9 @@ export const roleMenuAuth = post('/sys/roleMenuAuth');
 export const getRoleMenu = get('/sys/getRoleMenu');
 
 export const getApiList = get('/sys/getApiList');
+
+export const getAuthApiList = get('/sys/getAuthApiList');
+
+export const roleApiAuth = post('/sys/roleApiAuth');
+
+export const getUserList = get('/sys/getUserList');

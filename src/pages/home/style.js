@@ -11,12 +11,17 @@ export const LayoutWrap = styled.div`
       font-size: 12px;
     }
     .logo {
-      padding: 14px 0;
-      text-align: center;
-      h1 {
-        font-weight: bold;
-        font-size: 24px;
+      padding: 20px 20px;
+      display: flex;
+      align-items: center;
+      img {
+        height: 36px;
+      }
+      .txt {
+        margin-left: 10px;
+        font-size: 20px;
         color: #fff;
+        font-weight: bold;
       }
     }
   }

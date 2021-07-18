@@ -1,12 +1,10 @@
 import React, { memo, useEffect, useState, useRef } from 'react';
-import { Menu, Table, Tag, Switch } from 'antd';
-import { CopyOutlined } from '@ant-design/icons';
+import { Menu, Table, Tag } from 'antd';
+import { CopyOutlined, FolderOpenOutlined } from '@ant-design/icons';
 import * as systemApi from '@/api/system';
 import { ApiManageWrap } from './style';
 import { getInnerText } from '@/utils/helpers';
-
-// name\addr\method\desc\group\params\response\auth
-// 接口名称、接口描述、接口地址、参数表格、返回值表格
+import { apiListToTree } from '@/lib/common';
 
 const paramsColumns = [
   { title: '字段', dataIndex: 'field' },
@@ -50,34 +48,8 @@ const ApiManage = memo(function ApiManage(props) {
   useEffect(() => {
     systemApi.getApiList().then(res => {
       const { result = [] } = res;
-      const _apiList = [];
-      const groupIdxMap = {};
-      result.forEach(item => {
-        item.lastAddr = item.addr.split('/').slice(-1);
-        const { group } = item;
-        // 有分组
-        if(group) {
-          const groupIdx = groupIdxMap[group];
-          // 分组已存在
-          if(groupIdx !== undefined) {
-            // 往分组添加子元素
-            _apiList[groupIdx].children.push(item);
-          } else {
-            // 创建分组，并将当期元素存入为第一个子元素
-            const len = _apiList.push({
-              group: item.group,
-              children: [item]
-            });
-            // 记住分组的索引，用于下次读取
-            groupIdxMap[item.group] = len - 1;
-          }
-        } else {
-          // 无分组，则放在外层
-          _apiList.push(item);
-        }
-      })
       flatApiList.current = result;
-      setApiList(_apiList);
+      setApiList(apiListToTree(result));
     })
   }, [])
   function onSelectNav({ key }) {
@@ -96,7 +68,7 @@ const ApiManage = memo(function ApiManage(props) {
           apiList.map(item => {
             if(item.children) {
               return (
-                <Menu.SubMenu title={item.group} key={item.group}>
+                <Menu.SubMenu title={item.group} key={item.group} icon={<FolderOpenOutlined />}>
                   {
                     item.children.map(item => 
                       <Menu.Item key={item.addr}>
@@ -119,11 +91,14 @@ const ApiManage = memo(function ApiManage(props) {
             <div className="item" key={item.addr}>
               <div className="top">
                 <div className="name">{item.name}</div>
-                <div className="addr">{item.addr}<CopyOutlined className="copy-btn"/></div>
+                <div className="desc">{item.desc}</div>
               </div>
-              <div className="flex between mb-5">
-                <div className="min-desc">{item.desc}</div>
-                <Switch checkedChildren="开启鉴权" unCheckedChildren="关闭鉴权" defaultChecked={!!item.auth} className="auth-switch"/>
+              <div className="api">
+                <div className="flex">
+                  <Tag color={item.method === 'GET' ? 'green' : 'blue'}>{ item.method }</Tag>
+                  <div className="addr">{item.addr}<CopyOutlined className="copy-btn"/></div>
+                </div>
+                { item.auth ? <Tag color="#08f">角色鉴权</Tag> : null }
               </div>
               <Table
                 bordered
@@ -132,7 +107,7 @@ const ApiManage = memo(function ApiManage(props) {
                 className="mb-10"
                 title={() => <div className="table-head params">请求参数</div>}
                 columns={paramsColumns}
-                dataSource={JSON.parse(item.params)}
+                dataSource={JSON.parse(item.params).map((item, index) => ({...item, key: index}))}
               />
               <Table
                 bordered
@@ -140,7 +115,7 @@ const ApiManage = memo(function ApiManage(props) {
                 size="small"
                 title={() => <div className="table-head response">响应结果</div>}
                 columns={responseColumns}
-                dataSource={JSON.parse(item.response)}
+                dataSource={JSON.parse(item.response).map((item, index) => ({...item, key: index}))}
               />
             </div>
           ))

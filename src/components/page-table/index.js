@@ -20,6 +20,7 @@ const PageTable = forwardRef(function PageTable({
   showSearch,
   searchKey,
   searchPlaceHolder,
+  rowSelection,
   tableConfig,
   pageConfig,
   topLeft,
@@ -84,6 +85,7 @@ const PageTable = forwardRef(function PageTable({
         loading={loading}
         columns={columns}
         dataSource={list}
+        rowSelection={rowSelection}
         {...defaultTableConfig}
         {...tableConfig}
         className="mb-10"
@@ -147,10 +149,12 @@ function usePage({ defaultPageSize, getListFn, defaultParams = {} }) {
       ...params
     }).then(res => {
       setTotal(res.total);
-      setList(res.result.map((item, index) => ({
-        key: index,
-        ...item
-      })));
+      if(Array.isArray(res.result)) {
+        setList(res.result.map((item, index) => ({
+          key: index,
+          ...item
+        })));
+      }
     }).finally(() => {
       setLoading(false);
     })

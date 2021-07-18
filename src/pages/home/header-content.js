@@ -40,7 +40,7 @@ export default memo(function HeaderContent() {
     >
       <div className="user">
         <Avatar size={30} icon={<UserOutlined />} />
-        <span className="user-name">{ userInfo.userName }</span>
+        <span className="user-name">{ userInfo.name || userInfo.account }</span>
       </div>
     </Dropdown>
   )
