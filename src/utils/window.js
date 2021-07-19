@@ -23,3 +23,5 @@ window.lStore = {
 }
 
 window.isEmpty = isEmpty;
+
+window.notEmptyArray = arr => Array.isArray(arr) && arr.length;

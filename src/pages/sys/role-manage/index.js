@@ -1,6 +1,5 @@
-import React, { memo, useMemo, useRef, useState } from 'react';
+import React, { memo, useMemo, useRef, useState, useCallback } from 'react';
 import { Button, Switch, Space, Modal, Tag, message } from 'antd';
-import { CloseOutlined, CheckOutlined } from '@ant-design/icons';
 import { useBool } from '@/hooks/base-hooks';
 import AuthMenu from './auth-menu';
 import AuthApi from './auth-api';
@@ -68,6 +67,16 @@ export default memo(function RoleManage() {
       fn();
     }
   }
+
+  const onUpdateDefaultRole = useCallback((e, role) => {
+    if(!e) {
+      message.warning('当前已经是默认角色');
+      return;// 原本就是默认角色的直接阻止
+    }
+    systemApi.updateDefaultRole({
+      roleCode: role.code
+    }).then(roleListRef.current.getList)
+  }, [])
   
   const roleColumns = useMemo(() => [
     { title: '角色名称', dataIndex: 'name', width: 200 },
@@ -85,12 +94,11 @@ export default memo(function RoleManage() {
       title: '默认角色',
       dataIndex: 'is_default',
       align: 'center',
-      width: 100,
-      render: is_default => (
+      width: 150,
+      render: (is_default, role) => (
         <Switch
-          checkedChildren={<CheckOutlined />}
-          unCheckedChildren={<CloseOutlined />}
-          defaultChecked={is_default}
+          checked={is_default}
+          onChange={(e) => { onUpdateDefaultRole(e, role) }}
         />
       )
     },
@@ -115,7 +123,7 @@ export default memo(function RoleManage() {
         </>
       )
     }
-  ], [openAuthMenu, openEditRole])
+  ], [openAuthMenu, openEditRole, onUpdateDefaultRole])
 
   return (
     <>
@@ -123,7 +131,7 @@ export default memo(function RoleManage() {
         ref={roleListRef}
         initGet
         showSearch
-        getListFn={systemApi.getRoleList}
+        getListFn={systemApi.getRoleListByPage}
         columns={roleColumns}
         topLeft={
           <Space>

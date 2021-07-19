@@ -1,9 +1,8 @@
-import React, { memo, useRef } from 'react'
+import React, { memo, useRef, useState } from 'react'
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { Tabs, Space, Input, Button } from 'antd';
 import { useDispatch } from 'react-redux';
 import { useHistory } from 'react-router-dom';
-import { useRequest } from '@/hooks/base-hooks';
 import { LoginWrap } from './style';
 import * as userApi from '@/api/user';
 import AppFooter from '@/components/app-footer';
@@ -13,11 +12,10 @@ export default memo(function Login() {
   const history = useHistory();
   const account = useRef('');
   const password = useRef('');
-  const { loading: loginLoading, run: login } = useRequest(loginRequest, {
-    manual: true
-  });
-  function loginRequest() {
-    return userApi.login({
+  const [loginLoading, setLoginLoading] = useState(false);
+  function login() {
+    setLoginLoading(true);
+    userApi.login({
       account: account.current,
       password: password.current,
       $config: { 
@@ -31,6 +29,8 @@ export default memo(function Login() {
       dispatch({ type: 'setToken', data: res.result});
       dispatch({ type: 'setUserInfo', data: res.userInfo});
       history.push('/home');
+    }).finally(() => {
+      setLoginLoading(false);
     })
   }
 
@@ -52,7 +52,7 @@ export default memo(function Login() {
                 placeholder="账号"
                 prefix={<UserOutlined className="inp-icon" />}
                 allowClear
-                className="f-item"
+                className="inp"
                 onChange={e => account.current = e.target.value}
                 onPressEnter={login}
               />
@@ -60,7 +60,7 @@ export default memo(function Login() {
                 size="large" 
                 placeholder="密码"
                 prefix={<LockOutlined className="inp-icon" />} 
-                className="f-item"
+                className="inp"
                 onChange={e => password.current = e.target.value}
                 onPressEnter={login}
               />

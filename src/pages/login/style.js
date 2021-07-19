@@ -36,8 +36,7 @@ export const LoginWrap = styled.div`
     }
     .wrap {
       width: 100%;
-      .f-item {
-        width: 100%;
+      .inp {
         .inp-icon {
           font-size: 14px;
           color: ${blue.primary}
