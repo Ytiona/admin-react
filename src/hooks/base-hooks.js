@@ -28,7 +28,7 @@ export function useUpdateEffect(effect, deps) {
       return effect();
     }
   }, deps);
-};
+}
 
 export function useRequest(request, {
   manual = false

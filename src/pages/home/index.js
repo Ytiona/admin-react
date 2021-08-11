@@ -34,20 +34,22 @@ export default memo(function Home({ location }) {
                 <Header className="header">
                   <HeaderContent />
                 </Header>
-                <Content className="uber-container">
-                  <Card className="uber-content">
-                    {
-                      <Suspense fallback={<AppLoading />}>
-                        {
-                          Routes
-                        }
-                      </Suspense>
-                    }
-                  </Card>
-                </Content>
-                <Footer className="footer">
-                  <AppFooter />
-                </Footer>
+                <div className="scroll-wrap">
+                  <Content className="uber-container">
+                    <Card className="uber-content">
+                      {
+                        <Suspense fallback={<AppLoading />}>
+                          {
+                            Routes
+                          }
+                        </Suspense>
+                      }
+                    </Card>
+                  </Content>
+                  <Footer className="footer">
+                    <AppFooter />
+                  </Footer>
+                </div>
               </Layout>
             </Layout>
           </LayoutWrap> :

@@ -1,8 +1,16 @@
 import React, { memo, useMemo, useCallback, useRef } from 'react';
 import PageTable from '@/components/page-table';
 import * as systemApi from '@/api/system';
-import { Button, Tag, Avatar, Form, Input, Select, Space, message, Modal } from 'antd';
-import { UserOutlined, SearchOutlined, UserAddOutlined, StopOutlined, DeleteOutlined } from '@ant-design/icons';
+import { 
+  Button, Tag, Avatar, Form, 
+  Input, Select, Space, message, 
+  Modal, Menu, Dropdown 
+} from 'antd';
+import { 
+  UserOutlined, SearchOutlined, UserAddOutlined, 
+  StopOutlined, DeleteOutlined, CheckSquareOutlined, 
+  DownOutlined 
+} from '@ant-design/icons';
 import { useBool } from '@/hooks/base-hooks';
 import UserModal from './user-model';
 
@@ -10,13 +18,6 @@ const UserManage = memo(function () {
   const userList = useRef({});
   const [searchForm] = Form.useForm();
   const searchValues = useRef({});
-
-  const onDisableUser = useCallback(() => {
-
-  }, [])
-  const onDeleteRole = useCallback(() => {
-    
-  }, [])
   
   const selectUser = useRef([]);
   const {
@@ -31,9 +32,9 @@ const UserManage = memo(function () {
     setFalse: closeEditUser
   } = useBool();
 
-  const getUserList = () => {
+  const getUserList = useCallback(() => {
     return systemApi.getUserList(searchValues.current);
-  }
+  }, [])
 
   const search = () => {
     const { getFieldsValue } = searchForm;
@@ -41,7 +42,6 @@ const UserManage = memo(function () {
     userList.current.getList(true);
   }
 
-  
   const operateBefore = (users, options) => {
     if(!window.notEmptyArray(users)) return message.warning('请选择');
     Modal.confirm({
@@ -70,17 +70,18 @@ const UserManage = memo(function () {
     })
   }, [systemApi.deleteUser])
 
-  const disableUser = useCallback((users) => {
+  const toggleUserState = useCallback((users, enabled) => {
     operateBefore(users, {
-      title: '确认禁用以下用户？',
+      title: enabled ?  '确认启用以下用户？' : '确认禁用以下用户？',
       onOk: () => {
         systemApi.disableUser({
+          enabled,
           userIds: users.map(item => item.id)
         }).then(userList.current.getList)
       }
     })
   }, [systemApi.deleteUser])
-  
+
   const userColumns = useMemo(() => [
     { 
       title: '头像', dataIndex: 'avatar', 
@@ -121,12 +122,43 @@ const UserManage = memo(function () {
       render: (text, user) => (
         <>
           <Button size="small" type="link" onClick={openEditUser}>编辑</Button>
-          <Button size="small" type="link" onClick={() => disableUser([user])}>禁用</Button>
+          {
+            user.enabled ? 
+            <Button size="small" type="link" onClick={() => toggleUserState([user], false)}>禁用</Button> :
+            <Button size="small" type="link" onClick={() => toggleUserState([user], true)}>启用</Button>
+          }
           <Button size="small" type="link" onClick={() => deleteUser([user])}>删除</Button>
         </>
       )
     }
-  ], [disableUser, deleteUser])
+  ], [toggleUserState, deleteUser])
+
+  const handleBatchOperate = useCallback(({ key }) => {
+    switch (key) {
+      case '1':
+        toggleUserState(selectUser.current, true)
+        break;
+      case '2':
+        toggleUserState(selectUser.current, false)
+        break;
+      case '3':
+        deleteUser(selectUser.current)
+        break;
+      default:
+        break;
+    }
+  }, [])
+
+  const batchOperateMenu = useMemo(() => {
+    return (
+      <Menu onClick={handleBatchOperate}>
+        <Menu.Item key="1" icon={<CheckSquareOutlined />}>批量启用</Menu.Item>
+        <Menu.Item key="2" icon={<StopOutlined />}>批量禁用</Menu.Item>
+        <Menu.Item key="3" icon={<DeleteOutlined />}>批量删除</Menu.Item>
+      </Menu>
+    )
+  }, [])
+
 
   return (
     <div>
@@ -151,8 +183,12 @@ const UserManage = memo(function () {
         </Form>
         <Space>
           <Button type="primary" icon={<UserAddOutlined />} onClick={openAddUser}>添加用户</Button>
-          <Button icon={<StopOutlined />} onClick={() => disableUser(selectUser.current)}>批量禁用</Button>
-          <Button icon={<DeleteOutlined />} onClick={() => deleteUser(selectUser.current)}>批量删除</Button>
+          <Dropdown overlay={batchOperateMenu}>
+            <Button>批量操作<DownOutlined /></Button>
+          </Dropdown>
+          {/* <Button icon={<CheckSquareOutlined />} onClick={() => toggleUserState(selectUser.current, true)}>批量启用</Button>
+          <Button icon={<StopOutlined />} onClick={() => toggleUserState(selectUser.current, false)}>批量禁用</Button>
+          <Button icon={<DeleteOutlined />} onClick={() => deleteUser(selectUser.current)}>批量删除</Button> */}
         </Space>
       </div>
       <PageTable

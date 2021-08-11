@@ -27,7 +27,9 @@ export const LayoutWrap = styled.div`
   }
   .uber-main {
     flex: 1;
-    min-height: 100vh;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
     .header {
       padding: 0 14px;
       height: 48px;
@@ -53,14 +55,18 @@ export const LayoutWrap = styled.div`
         }
       }
     }
-    .uber-container {
-      margin: 14px 14px 0 14px;
-      .uber-content {
-        overflow: auto;
+    .scroll-wrap {
+      flex: 1;
+      overflow: auto;
+      .uber-container {
+        margin: 14px 14px 0 14px;
+        .uber-content {
+          overflow: auto;
+        }
       }
-    }
-    .footer {
-      padding: 0;
+      .footer {
+        padding: 0;
+      }
     }
   }
 `

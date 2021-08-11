@@ -5,6 +5,7 @@ import * as systemApi from '@/api/system';
 import { ApiManageWrap } from './style';
 import { getInnerText } from '@/utils/helpers';
 import { apiListToTree } from '@/lib/common';
+import { useUpdateEffect } from '@/hooks/base-hooks';
 
 const paramsColumns = [
   { title: '字段', dataIndex: 'field' },
@@ -44,6 +45,8 @@ const responseColumns = [
 const ApiManage = memo(function ApiManage(props) {
   const [apiList, setApiList] = useState([]);
   const flatApiList = useRef([]);
+  const apiListEl = useRef(null);
+  const currentFocusApiIdx = useRef(null);
   const [currentApis, setCurrentApis] = useState([]);
   useEffect(() => {
     systemApi.getApiList().then(res => {
@@ -60,7 +63,16 @@ const ApiManage = memo(function ApiManage(props) {
     } else {
       setCurrentApis(_flatApiList.filter(item => !item.group));
     }
+    currentFocusApiIdx.current = currentApis.findIndex(item => item.addr === key);
   }
+
+  useUpdateEffect(() => {
+    const currentApiEl = apiListEl.current.querySelector(`#api-${currentFocusApiIdx.current}`);
+    if(currentApiEl) {
+      currentApiEl.scrollIntoView({behavior: 'smooth'});
+    }
+  }, [currentApis])
+
   return (
     <ApiManageWrap>
       <Menu mode="inline" className="nav" onSelect={onSelectNav}>
@@ -70,7 +82,7 @@ const ApiManage = memo(function ApiManage(props) {
               return (
                 <Menu.SubMenu title={item.group} key={item.group} icon={<FolderOpenOutlined />}>
                   {
-                    item.children.map(item => 
+                    item.children.map((item, index) => 
                       <Menu.Item key={item.addr}>
                         { item.name }<span className="min-desc ml-5">/{item.lastAddr}</span>
                       </Menu.Item>
@@ -85,10 +97,10 @@ const ApiManage = memo(function ApiManage(props) {
           })
         }
       </Menu>
-      <div className="api-list">
+      <div className="api-list" ref={apiListEl}>
         {
-          currentApis.map(item => (
-            <div className="item" key={item.addr}>
+          currentApis.map((item, index) => (
+            <div className="item" id={'api-'+index} key={item.addr}>
               <div className="top">
                 <div className="name">{item.name}</div>
                 <div className="desc">{item.desc}</div>
