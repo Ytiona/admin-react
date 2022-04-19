@@ -27,3 +27,14 @@ export const createUser = post('/sys/createUser');
 export const updateUser = post('/sys/updateUser');
 export const deleteUser = post('/sys/deleteUser');
 export const disableUser = post('/sys/disableUser');
+
+// 字典管理
+export const addDict = post('/sys/addDict');
+export const getDictList = get('/sys/getDictList');
+export const deleteDict = post('/sys/deleteDict');
+export const updateDict = post('/sys/updateDict');
+
+export const addDictItem = post('/sys/addDictItem');
+export const getDictItems = get('/sys/getDictItems');
+export const deleteDictItems = post('/sys/deleteDictItems');
+export const updateDictItem = post('/sys/updateDictItem');

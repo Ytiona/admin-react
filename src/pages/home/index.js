@@ -1,4 +1,4 @@
-import React, { memo, Suspense } from 'react';
+import React, { memo, Suspense, useState, useRef, useCallback } from 'react';
 import { Redirect, Link } from 'react-router-dom';
 import { Layout, Menu, Card } from 'antd';
 import Icon from '@/components/icon';
@@ -8,32 +8,40 @@ import AppLoading from '@/components/app-loading';
 import useUserMenus from '@/hooks/use-user-menus';
 import HeaderContent from './header-content';
 
-const { Header, Content, Footer, Sider } = Layout;
+const { Content, Footer, Sider } = Layout;
 const { SubMenu } = Menu;
 
 export default memo(function Home({ location }) {
   const { token, menuList, Routes } = useUserMenus();
+  const [menuCollapsed, setMenuCollapsed] = useState(false);
+  const menu = useRef();
+  const onSelectMenu = useCallback(() => {
+    console.log(menu.current);
+  }, [])
+  const onCollapseMenu = () => {
+    setMenuCollapsed(!menuCollapsed);
+  }
   return (
     <>
       {
         token ?
           <LayoutWrap>
             <Layout className="layout">
-              <Sider className="sider">
+              <Sider className="sider" collapsible collapsed={menuCollapsed} onCollapse={onCollapseMenu}>
                 <div className="logo">
                   <img src={require("@/assets/img/logo.svg").default} alt="" />
-                  <span className="txt">Yzm Admin</span>
+                  <span className="txt" style={{ display: menuCollapsed ? 'none' : '' }}>Yzm Admin</span>
                 </div>
                 <Menu
+                  ref={menu}
                   theme="dark"
                   mode="inline"
+                  onSelect={onSelectMenu}
                   defaultSelectedKeys={[location.pathname]}
                 >{generateMenu(menuList)}</Menu>
               </Sider>
               <Layout className="uber-main">
-                <Header className="header">
-                  <HeaderContent />
-                </Header>
+                <HeaderContent />
                 <div className="scroll-wrap">
                   <Content className="uber-container">
                     <Card className="uber-content">

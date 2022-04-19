@@ -11,6 +11,7 @@ export const LayoutWrap = styled.div`
       font-size: 12px;
     }
     .logo {
+      position: relative;
       padding: 20px 20px;
       display: flex;
       align-items: center;
@@ -18,7 +19,10 @@ export const LayoutWrap = styled.div`
         height: 36px;
       }
       .txt {
-        margin-left: 10px;
+        position: absolute;
+        width: 120px;
+        left: 60px;
+        top: 24px;
         font-size: 20px;
         color: #fff;
         font-weight: bold;
@@ -35,15 +39,13 @@ export const LayoutWrap = styled.div`
       height: 48px;
       display: flex;
       align-items: center;
-      justify-content: flex-end;
+      justify-content: space-between;
       line-height: normal;
       z-index: 1;
       box-shadow: 0 1px 4px rgb(0 21 41 / 8%);
       background-color: #fff;
       .user-drop {
-        min-width: 160px;
         justify-content: flex-end;
-        padding-right: 10px;
       }
       .user {
         display: flex;

@@ -42,7 +42,7 @@ export default memo(function Login() {
             <img src={require("@/assets/img/logo.svg").default} alt="" height={48}/>
             <span className="txt">Yzm Admin</span>
           </div>
-          <p className="desc">著名前端工程师Li Yu倾力打造</p>
+          <p className="desc">一款精心设计的管理后台框架</p>
         </div>
         <Tabs centered>
           <Tabs.TabPane tab="账号密码登录" key="1">

@@ -25,3 +25,19 @@ window.lStore = {
 window.isEmpty = isEmpty;
 
 window.notEmptyArray = arr => Array.isArray(arr) && arr.length;
+
+Function.prototype.unshiftParam = function () {
+  const self = this;
+  const inhertParams = arguments;
+  return function () {
+    self.apply(this, [...inhertParams, ...arguments]);
+  }
+}
+
+Function.prototype.pushParam = function () {
+  const self = this;
+  const inhertParams = arguments;
+  return function () {
+    self.apply(this, [...arguments, ...inhertParams]);
+  }
+}

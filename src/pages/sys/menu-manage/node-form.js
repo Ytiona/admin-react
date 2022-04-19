@@ -45,7 +45,7 @@ const initNodeForm = {
   icon_type: '0',
   path: '',
   component_path: '',
-  order_val: null,
+  sort_val: null,
   remarks: '',
   enabled: true
 }
@@ -231,11 +231,11 @@ const NodeForm = function NodeForm({ parentNode, node, isEdit }, ref) {
             </Form.Item>
           )
         }
-        <Form.Item label="排序值" name="order_val" rules={[{ required: true, message: '请输入排序值' }]}>
+        <Form.Item label="排序值" name="sort_val" rules={[{ required: true, message: '请输入排序值' }]}>
           <InputNumber
             placeholder="请输入排序值"
             style={{ width: '100%' }}
-            onChange={num => { updateNodeForm({ order_val: num }) }}
+            onChange={num => { updateNodeForm({ sort_val: num }) }}
           />
         </Form.Item>
         <Form.Item label="说明" name="remarks">
